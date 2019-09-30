@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 import subprocess
-import string
 import os
 import sys
 import argparse
@@ -14,10 +13,12 @@ def verify_mac(mac):
     return len(s) == 12   
 
 class EthernetMac(object):
-    def __init__(self):
-        self.mac = self._get_mac()
-        
-    def _get_mac(self):
+    fuselock = "0x0300\n"
+    
+    def is_fused(self):
+        return (int(self.get().replace(':', ''), base=16))
+    
+    def get(self):
         with open(os.path.join(fuse_path, 'HW_OCOTP_MAC0'), 'r') as f:
             mac0 = f.read().strip()[2:].zfill(8)
     
@@ -26,12 +27,7 @@ class EthernetMac(object):
         
         mac_list = [mac1[0:2], mac1[2:4], mac0[0:2], mac0[2:4], mac0[4:6], mac0[6:8]]
         return ':'.join(mac_list)
-    
-    def is_fused(self):
-        return (int(self.mac.replace(':', ''), base=16))
-    
-    def get(self):
-        return self.mac
+        return mac
     
     def set(self, mac):
         if self.is_fused():
@@ -41,27 +37,49 @@ class EthernetMac(object):
             raise RuntimeError(f'MAC invalid: {mac} -- aborting')
         
         mac_list = mac.split(':')
-        mac0 = '0x' + ''.join(mac_list[2:6])
-        mac1 = '0x' + ''.join(mac_list[0:2])
+        mac0 = '0x' + ''.join(mac_list[2:6]) + '\n'
+        mac1 = '0x' + ''.join(mac_list[0:2]) + '\n'
         
         with open(os.path.join(fuse_path, 'HW_OCOTP_MAC0'), 'w') as f:
             f.write(mac0)
         with open(os.path.join(fuse_path, 'HW_OCOTP_MAC1'), 'w') as f:
             f.write(mac1)
-        fuselock = "0x0300\n"
         with open(os.path.join(fuse_path, 'HW_OCOTP_LOCK'), 'w') as f:
+            f.write(self.fuselock)
+
+class Jtag(object):
+    '''
+    Disabled JTAG byt setting BT_DIR_DIS in cfg5
+    '''
+    lockmask = 0x00100000
+    fuselock = "0x00100008\n"
+    
+    def is_disabled(self):
+        with open(os.path.join(fuse_path, 'HW_OCOTP_CFG5'), 'r') as f:
+            cfg5 = f.read()
+        return (int(cfg5, base=16) & self.lockmask)
+        
+    def disable(self):
+        if self.is_disabled(): 
+            raise RuntimeError('JTAG already disabled')
+         
+        with open(os.path.join(fuse_path, 'HW_OCOTP_CFG5'), 'w') as f:
             f.write(fuselock)
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='''Write IMX fuse.
---mac:
-Expected format xx:xx:xx:xx:xx:xx
+    parser = argparse.ArgumentParser(description='''Write IMX fuses.
+!WARNING!
+
+Changes are permanent and irreversible
+
+!WARNING!
 ''',
                                      epilog='''Return value:
 0 for success, 1 for failure                                
 ''',
                                      formatter_class=RawDescriptionHelpFormatter)
     parser.add_argument('--mac', help='Flash MAC, format xx:xx:xx:xx:xx:xx')
+    parser.add_argument('--disable-jtag', action='store_true', help='Disable JTAG')
     args = parser.parse_args()
     if args.mac:
         if not verify_mac(args.mac):
@@ -74,5 +92,12 @@ Expected format xx:xx:xx:xx:xx:xx
             sys.exit(1)
         print(f'Ethernet MAC: fusing: {args.mac}')
         mac.set(args.mac)
+    
+    if args.disable_jtag:
+        jtag = Jtag()
+        if jtag.is_disabled():
+            print('JTAG is already disabled', file=sys.stderr)
+            sys.exit(1)
+        jtag.disable()
 
     sys.exit(0)
