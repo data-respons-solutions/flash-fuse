@@ -12,6 +12,27 @@ def verify_mac(mac):
     s = mac.replace(':','')
     return len(s) == 12   
 
+def read_fuse(name):
+    with open(os.path.join(fuse_path, name), 'r') as f:
+        return int(f.read(), base=16)
+    
+def write_fuse(name, mask):
+    with open(os.path.join(fuse_path, name), 'w') as f:
+        f.write(f'{hex(mask)}\n')
+
+class CFG5_DIR_BT_DIS(object):
+    '''
+    DIR_BT_DIS in CFG5 must be blown to 1 for normal operation.
+    ''' 
+    
+    CFG5_DIR_BT_DIS_mask = 0x00000008
+
+    def is_fused(self):
+        return (read_fuse('HW_OCOTP_CFG5') & self.CFG5_DIR_BT_DIS_mask)
+    
+    def fuse(self):
+        write_fuse('HW_OCOTP_CFG5', self.CFG5_DIR_BT_DIS_mask)
+        
 class EthernetMac(object):
     fuselock = "0x0300\n"
     
@@ -49,22 +70,15 @@ class EthernetMac(object):
 
 class Jtag(object):
     '''
-    Disabled JTAG byt setting BT_DIR_DIS in cfg5
+    Disabled JTAG byt setting SJC_DISABLE in CFG5
     '''
-    lockmask = 0x00100000
-    fuselock = "0x00100008\n"
+    CFG5_SJC_DISABLE = 0x00100000
     
     def is_disabled(self):
-        with open(os.path.join(fuse_path, 'HW_OCOTP_CFG5'), 'r') as f:
-            cfg5 = f.read()
-        return (int(cfg5, base=16) & self.lockmask)
-        
+        return (read_fuse('HW_OCOTP_CFG5') & self.CFG5_SJC_DISABLE)
+    
     def disable(self):
-        if self.is_disabled(): 
-            raise RuntimeError('JTAG already disabled')
-         
-        with open(os.path.join(fuse_path, 'HW_OCOTP_CFG5'), 'w') as f:
-            f.write(fuselock)
+        write_fuse('HW_OCOTP_CFG5', self.CFG5_SJC_DISABLE)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='''Write IMX fuses.
@@ -80,6 +94,7 @@ Changes are permanent and irreversible
                                      formatter_class=RawDescriptionHelpFormatter)
     parser.add_argument('--mac', help='Flash MAC, format xx:xx:xx:xx:xx:xx')
     parser.add_argument('--disable-jtag', action='store_true', help='Disable JTAG')
+    parser.add_argument('--mandatory', action='store_true', help='Mandatory fuses')
     args = parser.parse_args()
     if args.mac:
         if not verify_mac(args.mac):
@@ -89,15 +104,24 @@ Changes are permanent and irreversible
         mac = EthernetMac()
         if mac.is_fused():
             print(f'Ethernet MAC already fused: {mac.get()}', file=sys.stderr)
-            sys.exit(1)
-        print(f'Ethernet MAC: fusing: {args.mac}')
-        mac.set(args.mac)
+        else:
+            print(f'Ethernet MAC: fusing: {args.mac}')
+            mac.set(args.mac)
     
     if args.disable_jtag:
         jtag = Jtag()
         if jtag.is_disabled():
-            print('JTAG is already disabled', file=sys.stderr)
-            sys.exit(1)
-        jtag.disable()
+            print('JTAG: already disabled')
+        else:
+            print('JTAG: disabling')
+            jtag.disable()
+        
+    if args.mandatory:
+        cfg5_dir_bt_dis = CFG5_DIR_BT_DIS()  
+        if cfg5_dir_bt_dis.is_fused():
+            print('CFG5: DIR_BT_DIS: already fused')
+        else:
+            print('CFG5: DIR_BT_DIS: fusing')
+            cfg5_dir_bt_dis.fuse()
 
     sys.exit(0)
