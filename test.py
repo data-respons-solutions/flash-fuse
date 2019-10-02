@@ -18,55 +18,59 @@ def flash_fuse(dir, arglist):
     args.extend(arglist)
     return subprocess.run(args).returncode
 
-class test_jtag(unittest.TestCase):
+class test_jtag_disable(unittest.TestCase):
+    def setUp(self):
+        self.tmpdir = tempfile.TemporaryDirectory()
+        self.dir = self.tmpdir.name
+    def tearDown(self):
+        self.tmpdir.cleanup()
+        
     def test_burn(self):
-        with tempfile.TemporaryDirectory() as dir:
-                create_otp(dir, 'HW_OCOTP_CFG5', '0x00000012')
-                self.assertEqual(0, flash_fuse(dir, ['--disable-jtag', '--commit']))
-                self.assertEqual(get_otp(dir, 'HW_OCOTP_CFG5'), '0x00100000')
-                
+        create_otp(self.dir, 'HW_OCOTP_CFG5', '0x00000000')
+        self.assertEqual(0, flash_fuse(self.dir, ['--fuse', 'jtag-disable', '--commit']))
+        self.assertEqual(get_otp(self.dir, 'HW_OCOTP_CFG5'), '0x00100000')
+        
     def test_burn_already_fused(self):
-        with tempfile.TemporaryDirectory() as dir:
-            create_otp(dir, 'HW_OCOTP_CFG5', '0x00100012')
-            self.assertEqual(0, flash_fuse(dir, ['--disable-jtag', '--commit']))
-            self.assertEqual(get_otp(dir, 'HW_OCOTP_CFG5'), '0x00100012')
-            
+        create_otp(self.dir, 'HW_OCOTP_CFG5', '0x00100000')
+        self.assertEqual(0, flash_fuse(self.dir, ['--fuse', 'jtag-disable', '--commit']))
+        self.assertEqual(get_otp(self.dir, 'HW_OCOTP_CFG5'), '0x00100000')
+                
     def test_verify_not_fused(self):
-        with tempfile.TemporaryDirectory() as dir:
-            create_otp(dir, 'HW_OCOTP_CFG5', '0x00000012')
-            self.assertEqual(1, flash_fuse(dir, ['--disable-jtag']))
-            self.assertEqual(get_otp(dir, 'HW_OCOTP_CFG5'), '0x00000012')
+        create_otp(self.dir, 'HW_OCOTP_CFG5', '0x00000000')
+        self.assertEqual(1, flash_fuse(self.dir, ['--fuse', 'jtag-disable']))
+        self.assertEqual(get_otp(self.dir, 'HW_OCOTP_CFG5'), '0x00000000')
             
     def test_verify_fused(self):
-        with tempfile.TemporaryDirectory() as dir:
-            create_otp(dir, 'HW_OCOTP_CFG5', '0x00100012')
-            self.assertEqual(0, flash_fuse(dir, ['--disable-jtag']))
-            self.assertEqual(get_otp(dir, 'HW_OCOTP_CFG5'), '0x00100012')
+        create_otp(self.dir, 'HW_OCOTP_CFG5', '0x00100000')
+        self.assertEqual(0, flash_fuse(self.dir, ['--fuse', 'jtag-disable']))
+        self.assertEqual(get_otp(self.dir, 'HW_OCOTP_CFG5'), '0x00100000')
             
-class test_mandatory(unittest.TestCase):
+class test_cfg5_dir_bt_ds(unittest.TestCase):
+    def setUp(self):
+        self.tmpdir = tempfile.TemporaryDirectory()
+        self.dir = self.tmpdir.name
+    def tearDown(self):
+        self.tmpdir.cleanup()
+        
     def test_burn(self):
-        with tempfile.TemporaryDirectory() as dir:
-                create_otp(dir, 'HW_OCOTP_CFG5', '0x00000000')
-                self.assertEqual(0, flash_fuse(dir, ['--mandatory', '--commit']))
-                self.assertEqual(get_otp(dir, 'HW_OCOTP_CFG5'), '0x00000008')
+        create_otp(self.dir, 'HW_OCOTP_CFG5', '0x00000000')
+        self.assertEqual(0, flash_fuse(self.dir, ['--fuse', 'cfg5_dir_bit_ds', '--commit']))
+        self.assertEqual(get_otp(self.dir, 'HW_OCOTP_CFG5'), '0x00000008')
                 
     def test_burn_already_fused(self):
-        with tempfile.TemporaryDirectory() as dir:
-            create_otp(dir, 'HW_OCOTP_CFG5', '0x00000008')
-            self.assertEqual(0, flash_fuse(dir, ['--mandatory', '--commit']))
-            self.assertEqual(get_otp(dir, 'HW_OCOTP_CFG5'), '0x00000008')
+        create_otp(self.dir, 'HW_OCOTP_CFG5', '0x00000008')
+        self.assertEqual(0, flash_fuse(self.dir, ['--fuse', 'cfg5_dir_bit_ds', '--commit']))
+        self.assertEqual(get_otp(self.dir, 'HW_OCOTP_CFG5'), '0x00000008')
             
     def test_verify_not_fused(self):
-        with tempfile.TemporaryDirectory() as dir:
-            create_otp(dir, 'HW_OCOTP_CFG5', '0x00000000')
-            self.assertEqual(1, flash_fuse(dir, ['--mandatory']))
-            self.assertEqual(get_otp(dir, 'HW_OCOTP_CFG5'), '0x00000000')
+        create_otp(self.dir, 'HW_OCOTP_CFG5', '0x00000000')
+        self.assertEqual(1, flash_fuse(self.dir, ['--fuse', 'cfg5_dir_bit_ds']))
+        self.assertEqual(get_otp(self.dir, 'HW_OCOTP_CFG5'), '0x00000000')
             
     def test_verify_fused(self):
-        with tempfile.TemporaryDirectory() as dir:
-            create_otp(dir, 'HW_OCOTP_CFG5', '0x00000008')
-            self.assertEqual(0, flash_fuse(dir, ['--mandatory']))
-            self.assertEqual(get_otp(dir, 'HW_OCOTP_CFG5'), '0x00000008')
+        create_otp(self.dir, 'HW_OCOTP_CFG5', '0x00000008')
+        self.assertEqual(0, flash_fuse(self.dir, ['--fuse', 'cfg5_dir_bit_ds']))
+        self.assertEqual(get_otp(self.dir, 'HW_OCOTP_CFG5'), '0x00000008')
 
 class test_mac(unittest.TestCase):
     def setUp(self):
@@ -79,7 +83,7 @@ class test_mac(unittest.TestCase):
         create_otp(self.dir, 'HW_OCOTP_MAC0', '0x00000000')
         create_otp(self.dir, 'HW_OCOTP_MAC1', '0x00000000')
         create_otp(self.dir, 'HW_OCOTP_LOCK', '0x00000000')
-        self.assertEqual(0, flash_fuse(self.dir, ['--mac', '00:11:22:33:44:55', '--commit']))
+        self.assertEqual(0, flash_fuse(self.dir, ['--fuse', 'mac', '00:11:22:33:44:55', '--commit']))
         self.assertEqual(get_otp(self.dir, 'HW_OCOTP_MAC0'), '0x22334455')
         self.assertEqual(get_otp(self.dir, 'HW_OCOTP_MAC1'), '0x00000011')
         self.assertEqual(get_otp(self.dir, 'HW_OCOTP_LOCK'), '0x00000300')
@@ -88,7 +92,7 @@ class test_mac(unittest.TestCase):
         create_otp(self.dir, 'HW_OCOTP_MAC0', '0x22334455')
         create_otp(self.dir, 'HW_OCOTP_MAC1', '0x0011')
         create_otp(self.dir, 'HW_OCOTP_LOCK', '0x00000300')
-        self.assertEqual(0, flash_fuse(self.dir, ['--mac', '00:11:22:33:44:55', '--commit']))
+        self.assertEqual(0, flash_fuse(self.dir, ['--fuse', 'mac', '00:11:22:33:44:55', '--commit']))
         self.assertEqual(get_otp(self.dir, 'HW_OCOTP_MAC0'), '0x22334455')
         self.assertEqual(get_otp(self.dir, 'HW_OCOTP_MAC1'), '0x00000011')
         self.assertEqual(get_otp(self.dir, 'HW_OCOTP_LOCK'), '0x00000300')
@@ -97,7 +101,7 @@ class test_mac(unittest.TestCase):
         create_otp(self.dir, 'HW_OCOTP_MAC0', '0xff334455')
         create_otp(self.dir, 'HW_OCOTP_MAC1', '0x0011')
         create_otp(self.dir, 'HW_OCOTP_LOCK', '0x00000300')
-        self.assertEqual(1, flash_fuse(self.dir, ['--mac', '00:11:22:33:44:55', '--commit']))
+        self.assertEqual(1, flash_fuse(self.dir, ['--fuse', 'mac', '00:11:22:33:44:55', '--commit']))
         self.assertEqual(get_otp(self.dir, 'HW_OCOTP_MAC0'), '0xff334455')
         self.assertEqual(get_otp(self.dir, 'HW_OCOTP_MAC1'), '0x00000011')
         self.assertEqual(get_otp(self.dir, 'HW_OCOTP_LOCK'), '0x00000300')
@@ -106,7 +110,7 @@ class test_mac(unittest.TestCase):
         create_otp(self.dir, 'HW_OCOTP_MAC0', '0x00000000')
         create_otp(self.dir, 'HW_OCOTP_MAC1', '0x00000000')
         create_otp(self.dir, 'HW_OCOTP_LOCK', '0x00000000')
-        self.assertEqual(1, flash_fuse(self.dir, ['--mac', '00:11:22:33:44:55']))
+        self.assertEqual(1, flash_fuse(self.dir, ['--fuse', 'mac', '00:11:22:33:44:55']))
         self.assertEqual(get_otp(self.dir, 'HW_OCOTP_MAC0'), '0x00000000')
         self.assertEqual(get_otp(self.dir, 'HW_OCOTP_MAC1'), '0x00000000')
         self.assertEqual(get_otp(self.dir, 'HW_OCOTP_LOCK'), '0x00000000')
@@ -115,7 +119,7 @@ class test_mac(unittest.TestCase):
         create_otp(self.dir, 'HW_OCOTP_MAC0', '0x22334455')
         create_otp(self.dir, 'HW_OCOTP_MAC1', '0x0011')
         create_otp(self.dir, 'HW_OCOTP_LOCK', '0x00000300')
-        self.assertEqual(0, flash_fuse(self.dir, ['--mac', '00:11:22:33:44:55']))
+        self.assertEqual(0, flash_fuse(self.dir, ['--fuse', 'mac', '00:11:22:33:44:55']))
         self.assertEqual(get_otp(self.dir, 'HW_OCOTP_MAC0'), '0x22334455')
         self.assertEqual(get_otp(self.dir, 'HW_OCOTP_MAC1'), '0x00000011')
         self.assertEqual(get_otp(self.dir, 'HW_OCOTP_LOCK'), '0x00000300')
