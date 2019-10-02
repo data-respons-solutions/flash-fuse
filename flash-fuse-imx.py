@@ -131,11 +131,24 @@ fuse_obj_map = {
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='''Write IMX fuses.
+    
 !WARNING!
 
 Changes are permanent and irreversible
 
+Available --fuses, optional argument in parenthesis:
+    CFG5_SJC_DISABLE
+    MAC (lower case, i.e. xx:xx:xx:xx:xx:xx)
+    SRK (lower case, comma separated, 8 fields of 8 bytes, i.e. 0x12345678,....)
+    CFG5_DIR_BT_DIS
+    CFG5_BT_FUSE_SEL
+    CFG5_SEC_CONFIG
+    CFG4_BOOT_CFG1_EMMC
+    CFG4_BOOT_CFG2_EMMC_SDHC3
+    CFG4_BOOT_CFG2_EMMC_8BIT
+
 !WARNING!
+
 ''',
                                      epilog='''Return value:
 0 for success, 1 for failure                                
