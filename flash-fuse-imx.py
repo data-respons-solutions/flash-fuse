@@ -91,8 +91,6 @@ Changes are permanent and irreversible
     parser.add_argument('fuse_argument', nargs='?', default=None, help='Optional argument to target fuse')
     parser.add_argument('--fuse-path', help='Path to fsl_otp')
     parser.add_argument('--mac', help='Flash MAC, format xx:xx:xx:xx:xx:xx')
-    parser.add_argument('--disable-jtag', action='store_true', help='Disable JTAG')
-    parser.add_argument('--mandatory', action='store_true', help='Mandatory fuses')
     parser.add_argument('--commit', action='store_true', help='Allow burning fuses')
     parser.add_argument('--verify', action='store_true', help='Only verify, overrides --commit')
     args = parser.parse_args()
