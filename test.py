@@ -24,53 +24,40 @@ class test_jtag_disable(unittest.TestCase):
         self.dir = self.tmpdir.name
     def tearDown(self):
         self.tmpdir.cleanup()
+    @classmethod
+    def setUpClass(cls):
+        cls.ocotp = 'HW_OCOTP_CFG5'
+        cls.unfused = '0x00000000'
+        cls.fused = '0x00100000'
+        cls.arg = ['--fuse', 'jtag-disable']
         
     def test_burn(self):
-        create_otp(self.dir, 'HW_OCOTP_CFG5', '0x00000000')
-        self.assertEqual(0, flash_fuse(self.dir, ['--fuse', 'jtag-disable', '--commit']))
-        self.assertEqual(get_otp(self.dir, 'HW_OCOTP_CFG5'), '0x00100000')
+        create_otp(self.dir, self.ocotp, self.unfused)
+        self.assertEqual(0, flash_fuse(self.dir, self.arg + ['--commit']))
+        self.assertEqual(get_otp(self.dir, self.ocotp), self.fused)
         
     def test_burn_already_fused(self):
-        create_otp(self.dir, 'HW_OCOTP_CFG5', '0x00100000')
-        self.assertEqual(0, flash_fuse(self.dir, ['--fuse', 'jtag-disable', '--commit']))
-        self.assertEqual(get_otp(self.dir, 'HW_OCOTP_CFG5'), '0x00100000')
+        create_otp(self.dir, self.ocotp, self.fused)
+        self.assertEqual(0, flash_fuse(self.dir, self.arg + ['--commit']))
+        self.assertEqual(get_otp(self.dir, self.ocotp), self.fused)
                 
     def test_verify_not_fused(self):
-        create_otp(self.dir, 'HW_OCOTP_CFG5', '0x00000000')
-        self.assertEqual(1, flash_fuse(self.dir, ['--fuse', 'jtag-disable']))
-        self.assertEqual(get_otp(self.dir, 'HW_OCOTP_CFG5'), '0x00000000')
+        create_otp(self.dir, self.ocotp, self.unfused)
+        self.assertEqual(1, flash_fuse(self.dir, self.arg))
+        self.assertEqual(get_otp(self.dir, self.ocotp), self.unfused)
             
     def test_verify_fused(self):
-        create_otp(self.dir, 'HW_OCOTP_CFG5', '0x00100000')
-        self.assertEqual(0, flash_fuse(self.dir, ['--fuse', 'jtag-disable']))
-        self.assertEqual(get_otp(self.dir, 'HW_OCOTP_CFG5'), '0x00100000')
+        create_otp(self.dir, self.ocotp, self.fused)
+        self.assertEqual(0, flash_fuse(self.dir, self.arg))
+        self.assertEqual(get_otp(self.dir, self.ocotp), self.fused)
             
-class test_cfg5_dir_bt_ds(unittest.TestCase):
-    def setUp(self):
-        self.tmpdir = tempfile.TemporaryDirectory()
-        self.dir = self.tmpdir.name
-    def tearDown(self):
-        self.tmpdir.cleanup()
-        
-    def test_burn(self):
-        create_otp(self.dir, 'HW_OCOTP_CFG5', '0x00000000')
-        self.assertEqual(0, flash_fuse(self.dir, ['--fuse', 'cfg5_dir_bit_ds', '--commit']))
-        self.assertEqual(get_otp(self.dir, 'HW_OCOTP_CFG5'), '0x00000008')
-                
-    def test_burn_already_fused(self):
-        create_otp(self.dir, 'HW_OCOTP_CFG5', '0x00000008')
-        self.assertEqual(0, flash_fuse(self.dir, ['--fuse', 'cfg5_dir_bit_ds', '--commit']))
-        self.assertEqual(get_otp(self.dir, 'HW_OCOTP_CFG5'), '0x00000008')
-            
-    def test_verify_not_fused(self):
-        create_otp(self.dir, 'HW_OCOTP_CFG5', '0x00000000')
-        self.assertEqual(1, flash_fuse(self.dir, ['--fuse', 'cfg5_dir_bit_ds']))
-        self.assertEqual(get_otp(self.dir, 'HW_OCOTP_CFG5'), '0x00000000')
-            
-    def test_verify_fused(self):
-        create_otp(self.dir, 'HW_OCOTP_CFG5', '0x00000008')
-        self.assertEqual(0, flash_fuse(self.dir, ['--fuse', 'cfg5_dir_bit_ds']))
-        self.assertEqual(get_otp(self.dir, 'HW_OCOTP_CFG5'), '0x00000008')
+class test_cfg5_dir_bt_ds(test_jtag_disable):
+    @classmethod
+    def setUpClass(cls):
+        cls.ocotp = 'HW_OCOTP_CFG5'
+        cls.unfused = '0x00000000'
+        cls.fused = '0x00000008'
+        cls.arg = ['--fuse', 'cfg5_dir_bit_ds']
 
 class test_mac(unittest.TestCase):
     def setUp(self):
