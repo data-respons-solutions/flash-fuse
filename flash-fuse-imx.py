@@ -20,7 +20,7 @@ class CFG5_DIR_BT_DIS(object):
     MASK = 0x00000008
     OCOTP = 'HW_OCOTP_CFG5'
     def is_fused(self):
-        return (read_fuse(self.OCOTP) & self.MASK)
+        return (read_fuse(self.OCOTP) & self.MASK == self.MASK)
     def blow(self, unused):
         write_fuse(self.OCOTP, self.MASK)
     def get(self):
@@ -34,6 +34,40 @@ class CFG5_SJC_DISABLE(CFG5_DIR_BT_DIS):
     MASK = 0x00100000
     OCOTP = 'HW_OCOTP_CFG5'
     
+class CFG5_SEC_CONFIG(CFG5_DIR_BT_DIS):
+    MASK = 0x00000002
+    OCOTP = 'HW_OCOTP_CFG5'
+    
+class CFG4_BOOT_CFG1_EMMC(CFG5_DIR_BT_DIS):
+    MASK = 0x00000060
+    OCOTP = 'HW_OCOTP_CFG4'
+    
+class CFG4_BOOT_CFG2_EMMC_SDHC3(CFG5_DIR_BT_DIS):
+    MASK = 0x00001000
+    OCOTP = 'HW_OCOTP_CFG4'
+    
+class CFG4_BOOT_CFG2_EMMC_8BIT(CFG5_DIR_BT_DIS):
+    MASK = 0x00004000
+    OCOTP = 'HW_OCOTP_CFG4'
+    
+class Srk(object):
+    LOCKMASK = 0x00004000 
+    def is_fused(self):
+        return (read_fuse('HW_OCOTP_LOCK') & self.LOCKMASK == self.LOCKMASK)
+    def get(self):
+        srk = []
+        for i in range(8):
+            s = read_fuse(f'HW_OCOTP_SRK{i}')
+            srk.append(f'{s:#0{10}x}')
+        return ','.join(srk)
+    def blow(self, srk_str):
+        srk = [int(k, base=16) for k in srk_str.strip('\n').split(',')]
+        if len(srk) != 8:
+            raise RuntimeError(f'SRK invalid: {srk_str} -- aborting')
+        for i, val in enumerate(srk):
+            write_fuse(f'HW_OCOTP_SRK{i}', val)
+        write_fuse('HW_OCOTP_LOCK', self.LOCKMASK)
+
 class EthernetMac(object):
     LOCK_MAC_ADDR_mask = 0x0300
     def is_fused(self):
@@ -61,8 +95,12 @@ fuse_obj_map = {
         'obj' : CFG5_SJC_DISABLE,
         'arg' : False,
     },
-    'mac' : {
+    'MAC' : {
         'obj' : EthernetMac,
+        'arg' : True,
+    },
+    'SRK' : {
+        'obj' : Srk,
         'arg' : True,
     },
     'CFG5_DIR_BT_DIS' : {
@@ -71,6 +109,22 @@ fuse_obj_map = {
     },
     'CFG5_BT_FUSE_SEL' : {
         'obj' : CFG5_BT_FUSE_SEL,
+        'arg' : False,
+    },
+    'CFG5_SEC_CONFIG' : {
+        'obj' : CFG5_SEC_CONFIG,
+        'arg' : False,
+    },
+    'CFG4_BOOT_CFG1_EMMC' : {
+        'obj' : CFG4_BOOT_CFG1_EMMC,
+        'arg' : False,
+    },
+    'CFG4_BOOT_CFG2_EMMC_SDHC3' : {
+        'obj' : CFG4_BOOT_CFG2_EMMC_SDHC3,
+        'arg' : False,
+    },
+    'CFG4_BOOT_CFG2_EMMC_8BIT' : {
+        'obj' : CFG4_BOOT_CFG2_EMMC_8BIT,
         'arg' : False,
     },
 }
@@ -90,7 +144,6 @@ Changes are permanent and irreversible
     parser.add_argument('--fuse', help='Target fuse')
     parser.add_argument('fuse_argument', nargs='?', default=None, help='Optional argument to target fuse')
     parser.add_argument('--fuse-path', help='Path to fsl_otp')
-    parser.add_argument('--mac', help='Flash MAC, format xx:xx:xx:xx:xx:xx')
     parser.add_argument('--commit', action='store_true', help='Allow burning fuses')
     parser.add_argument('--verify', action='store_true', help='Only verify, overrides --commit')
     args = parser.parse_args()
@@ -112,8 +165,10 @@ Changes are permanent and irreversible
         if fuse.is_fused():
             val = fuse.get()
             if val != args.fuse_argument:
-                print(f'ERROR: {args.fuse}: already fused differently: {val} != {args.fuse_argument}', file=sys.stderr)
+                print(f'ERROR: {args.fuse}: already fused differently: "{val}" != "{args.fuse_argument}"', file=sys.stderr)
                 sys.exit(1)
+            else:
+                print(f'{args.fuse}: already fused')
         else:
             print(f'{args.fuse}: fusing{fuse_arg_str(args.fuse_argument)}')
             fuse.blow(args.fuse_argument)
