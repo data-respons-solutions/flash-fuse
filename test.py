@@ -51,13 +51,21 @@ class test_jtag_disable(unittest.TestCase):
         self.assertEqual(0, flash_fuse(self.dir, self.arg))
         self.assertEqual(get_otp(self.dir, self.ocotp), self.fused)
             
-class test_cfg5_dir_bt_ds(test_jtag_disable):
+class test_CFG5_DIR_BT_DIS(test_jtag_disable):
     @classmethod
     def setUpClass(cls):
         cls.ocotp = 'HW_OCOTP_CFG5'
         cls.unfused = '0x00000000'
         cls.fused = '0x00000008'
-        cls.arg = ['--fuse', 'cfg5_dir_bit_ds']
+        cls.arg = ['--fuse', 'CFG5_DIR_BT_DIS']
+        
+class test_CFG5_BT_FUSE_SEL(test_jtag_disable):
+    @classmethod
+    def setUpClass(cls):
+        cls.ocotp = 'HW_OCOTP_CFG5'
+        cls.unfused = '0x00000000'
+        cls.fused = '0x00000010'
+        cls.arg = ['--fuse', 'CFG5_BT_FUSE_SEL']
 
 class test_mac(unittest.TestCase):
     def setUp(self):

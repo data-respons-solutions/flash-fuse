@@ -17,13 +17,18 @@ def write_fuse(name, mask):
         f.write(f'{hex(mask)}\n')
 
 class CFG5_DIR_BT_DIS(object):
-    CFG5_DIR_BT_DIS_mask = 0x00000008
+    MASK = 0x00000008
+    OCOTP = 'HW_OCOTP_CFG5'
     def is_fused(self):
-        return (read_fuse('HW_OCOTP_CFG5') & self.CFG5_DIR_BT_DIS_mask)
+        return (read_fuse(self.OCOTP) & self.MASK)
     def blow(self, unused):
-        write_fuse('HW_OCOTP_CFG5', self.CFG5_DIR_BT_DIS_mask)
+        write_fuse(self.OCOTP, self.MASK)
     def get(self):
         return None
+    
+class CFG5_BT_FUSE_SEL(CFG5_DIR_BT_DIS):
+    MASK = 0x00000010
+    OCOTP = 'HW_OCOTP_CFG5'
     
 class EthernetMac(object):
     LOCK_MAC_ADDR_mask = 0x0300
@@ -65,8 +70,12 @@ fuse_obj_map = {
         'obj' : EthernetMac,
         'arg' : True,
     },
-    'cfg5_dir_bit_ds' : {
+    'CFG5_DIR_BT_DIS' : {
         'obj' : CFG5_DIR_BT_DIS,
+        'arg' : False,
+    },
+    'CFG5_BT_FUSE_SEL' : {
+        'obj' : CFG5_BT_FUSE_SEL,
         'arg' : False,
     },
 }
