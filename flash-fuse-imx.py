@@ -165,7 +165,7 @@ Changes are permanent and irreversible
         val = fuse.get()
         if val:
             if val != args.fuse_argument:
-                print(f'ERROR: {args.fuse}: already fused differently: "{val}" != "{args.fuse_argument}"', file=sys.stderr)
+                print(f'ERROR: {args.fuse}: already fused differently: fuse:"{val}" != arg:"{args.fuse_argument}"', file=sys.stderr)
                 sys.exit(1)
         
         print(f'{args.fuse}: already fused')
