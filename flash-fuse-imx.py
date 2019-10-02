@@ -155,6 +155,7 @@ Changes are permanent and irreversible
         print('--fuse not defined -- aborting', file=sys.stderr)
         sys.exit(1)
     
+    # Ignore fuse_argument if fuse type doesn't require it
     if not fuse_obj_map[args.fuse]['arg']:
         args.fuse_argument = None
         
