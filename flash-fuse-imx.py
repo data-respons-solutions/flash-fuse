@@ -30,6 +30,10 @@ class CFG5_BT_FUSE_SEL(CFG5_DIR_BT_DIS):
     MASK = 0x00000010
     OCOTP = 'HW_OCOTP_CFG5'
     
+class CFG5_SJC_DISABLE(CFG5_DIR_BT_DIS):
+    MASK = 0x00100000
+    OCOTP = 'HW_OCOTP_CFG5'
+    
 class EthernetMac(object):
     LOCK_MAC_ADDR_mask = 0x0300
     def is_fused(self):
@@ -51,19 +55,10 @@ class EthernetMac(object):
         write_fuse('HW_OCOTP_MAC0', int('0x' +''.join(mac_list[2:6]), base=16))
         write_fuse('HW_OCOTP_MAC1', int('0x' + ''.join(mac_list[0:2]), base=16))
         write_fuse('HW_OCOTP_LOCK', self.LOCK_MAC_ADDR_mask) 
-        
-class JtagDisable(object):
-    CFG5_SJC_DISABLE_mask = 0x00100000
-    def is_fused(self):
-        return (read_fuse('HW_OCOTP_CFG5') & self.CFG5_SJC_DISABLE_mask)
-    def blow(self, unused):
-        write_fuse('HW_OCOTP_CFG5', self.CFG5_SJC_DISABLE_mask)
-    def get(self):
-        None
 
 fuse_obj_map = {
-    'jtag-disable' : {
-        'obj' : JtagDisable,
+    'CFG5_SJC_DISABLE' : {
+        'obj' : CFG5_SJC_DISABLE,
         'arg' : False,
     },
     'mac' : {

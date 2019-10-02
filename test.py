@@ -18,7 +18,7 @@ def flash_fuse(dir, arglist):
     args.extend(arglist)
     return subprocess.run(args).returncode
 
-class test_jtag_disable(unittest.TestCase):
+class test_CFG5_SJC_DISABLE(unittest.TestCase):
     def setUp(self):
         self.tmpdir = tempfile.TemporaryDirectory()
         self.dir = self.tmpdir.name
@@ -29,7 +29,7 @@ class test_jtag_disable(unittest.TestCase):
         cls.ocotp = 'HW_OCOTP_CFG5'
         cls.unfused = '0x00000000'
         cls.fused = '0x00100000'
-        cls.arg = ['--fuse', 'jtag-disable']
+        cls.arg = ['--fuse', 'CFG5_SJC_DISABLE']
         
     def test_burn(self):
         create_otp(self.dir, self.ocotp, self.unfused)
@@ -51,7 +51,7 @@ class test_jtag_disable(unittest.TestCase):
         self.assertEqual(0, flash_fuse(self.dir, self.arg))
         self.assertEqual(get_otp(self.dir, self.ocotp), self.fused)
             
-class test_CFG5_DIR_BT_DIS(test_jtag_disable):
+class test_CFG5_DIR_BT_DIS(test_CFG5_SJC_DISABLE):
     @classmethod
     def setUpClass(cls):
         cls.ocotp = 'HW_OCOTP_CFG5'
@@ -59,7 +59,7 @@ class test_CFG5_DIR_BT_DIS(test_jtag_disable):
         cls.fused = '0x00000008'
         cls.arg = ['--fuse', 'CFG5_DIR_BT_DIS']
         
-class test_CFG5_BT_FUSE_SEL(test_jtag_disable):
+class test_CFG5_BT_FUSE_SEL(test_CFG5_SJC_DISABLE):
     @classmethod
     def setUpClass(cls):
         cls.ocotp = 'HW_OCOTP_CFG5'
