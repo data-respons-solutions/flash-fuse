@@ -161,22 +161,20 @@ Changes are permanent and irreversible
     fuse = fuse_obj_map[args.fuse]['obj']()
     fuse_arg_str = lambda x: f': {x}' if x else ''
 
-    if args.commit and not args.verify:
-        if fuse.is_fused():
-            val = fuse.get()
+    if fuse.is_fused():
+        val = fuse.get()
+        if val:
             if val != args.fuse_argument:
                 print(f'ERROR: {args.fuse}: already fused differently: "{val}" != "{args.fuse_argument}"', file=sys.stderr)
                 sys.exit(1)
-            else:
-                print(f'{args.fuse}: already fused')
-        else:
-            print(f'{args.fuse}: fusing{fuse_arg_str(args.fuse_argument)}')
-            fuse.blow(args.fuse_argument)
-    else:
-        if fuse.is_fused():
-            print(f'{args.fuse}: already fused')
-        else:
-            print(f'{args.fuse}: not fused{fuse_arg_str(args.fuse_argument)}')
-            sys.exit(1)
-    
-    sys.exit(0)
+        
+        print(f'{args.fuse}: already fused')
+        sys.exit(0)
+        
+    if args.commit and not args.verify:
+        print(f'{args.fuse}: fusing{fuse_arg_str(args.fuse_argument)}')
+        fuse.blow(args.fuse_argument)
+        sys.exit(0)
+
+    print(f'{args.fuse}: not fused{fuse_arg_str(args.fuse_argument)}')
+    sys.exit(1)

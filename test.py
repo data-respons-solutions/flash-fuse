@@ -214,6 +214,15 @@ class test_srk(unittest.TestCase):
         for i, val in enumerate(self.srk_key):
             self.assertEqual(get_otp(self.dir, f'HW_OCOTP_SRK{i}'), val)
         self.assertEqual(get_otp(self.dir, 'HW_OCOTP_LOCK'), '0x00004000')
+        
+    def test_verify_fused_wrong_value(self):
+        for i, val in enumerate(self.srk_key):
+            create_otp(self.dir, f'HW_OCOTP_SRK{i}', '0x11223344')
+        create_otp(self.dir, 'HW_OCOTP_LOCK', '0x00004000')   
+        self.assertEqual(1, flash_fuse(self.dir, ['--fuse', 'SRK', ','.join(self.srk_key)]))
+        for i, val in enumerate(self.srk_key):
+            self.assertEqual(get_otp(self.dir, f'HW_OCOTP_SRK{i}'), '0x11223344')
+        self.assertEqual(get_otp(self.dir, 'HW_OCOTP_LOCK'), '0x00004000')   
 
 if __name__ == '__main__':
     unittest.main()
