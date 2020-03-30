@@ -41,12 +41,20 @@ class CFG4_BOOT_CFG1_EMMC(CFG5_DIR_BT_DIS):
     MASK = 0x00000060
     OCOTP = 'HW_OCOTP_CFG4'
     
+class CFG4_BOOT_CFG1_SPI(CFG5_DIR_BT_DIS):
+    MASK = 0x00000030
+    OCOTP = 'HW_OCOTP_CFG4'
+    
 class CFG4_BOOT_CFG2_EMMC_SDHC3(CFG5_DIR_BT_DIS):
     MASK = 0x00001000
     OCOTP = 'HW_OCOTP_CFG4'
     
 class CFG4_BOOT_CFG2_EMMC_8BIT(CFG5_DIR_BT_DIS):
     MASK = 0x00004000
+    OCOTP = 'HW_OCOTP_CFG4'
+
+class CFG4_BOOT_CFG4_SPI_SPI2(CFG5_DIR_BT_DIS):
+    MASK = 0x01000000
     OCOTP = 'HW_OCOTP_CFG4'
     
 class Srk(object):
@@ -118,12 +126,20 @@ fuse_obj_map = {
         'obj' : CFG4_BOOT_CFG1_EMMC,
         'arg' : False,
     },
+    'CFG4_BOOT_CFG1_SPI' : {
+        'obj' : CFG4_BOOT_CFG1_SPI,
+        'arg' : False,
+    },
     'CFG4_BOOT_CFG2_EMMC_SDHC3' : {
         'obj' : CFG4_BOOT_CFG2_EMMC_SDHC3,
         'arg' : False,
     },
     'CFG4_BOOT_CFG2_EMMC_8BIT' : {
         'obj' : CFG4_BOOT_CFG2_EMMC_8BIT,
+        'arg' : False,
+    },
+    'CFG4_BOOT_CFG4_SPI_SPI2' : {
+        'obj' : CFG4_BOOT_CFG4_SPI_SPI2,
         'arg' : False,
     },
 }
