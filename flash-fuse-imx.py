@@ -61,6 +61,10 @@ class CFG4_SERIALROM_SPI3(CFG5_DIR_BT_DIS):
     MASK = 0x02000000
     OCOTP = 'HW_OCOTP_CFG4'
     
+class CFG4_SERIALROM_SPI_ADDRESSING_24BIT(CFG5_DIR_BT_DIS):
+    MASK = 0x08000000
+    OCOTP = 'HW_OCOTP_CFG4'
+      
 class Srk(object):
     LOCKMASK = 0x00004000 
     def is_fused(self):
@@ -150,6 +154,10 @@ fuse_obj_map = {
         'obj' : CFG4_SERIALROM_SPI3,
         'arg' : False,
     },
+    'CFG4_SERIALROM_SPI_ADDRESSING_24BIT' : {
+        'obj' : CFG4_SERIALROM_SPI_ADDRESSING_24BIT,
+        'arg' : False,
+    },
 }
 
 if __name__ == "__main__":
@@ -172,6 +180,7 @@ Available --fuses, optional argument in parenthesis:
     # CFG4_SERIALROM options
     CFG4_SERIALROM_SPI2
     CFG4_SERIALROM_SPI3
+    CFG4_SERIALROM_SPI_ADDRESSING_24BIT
     
     # General
     MAC (lower case, i.e. xx:xx:xx:xx:xx:xx)

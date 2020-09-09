@@ -122,6 +122,14 @@ class test_CFG4_SERIALROM_SPI3(test_CFG5_SJC_DISABLE):
         cls.unfused = '0x00000000'
         cls.fused = '0x02000000'
         cls.arg = ['--fuse', 'CFG4_SERIALROM_SPI3']
+        
+class test_CFG4_SERIALROM_SPI_ADDRESSING_24BIT(test_CFG5_SJC_DISABLE):
+    @classmethod
+    def setUpClass(cls):
+        cls.ocotp = 'HW_OCOTP_CFG4'
+        cls.unfused = '0x00000000'
+        cls.fused = '0x08000000'
+        cls.arg = ['--fuse', 'CFG4_SERIALROM_SPI_ADDRESSING_24BIT']
 
 class test_mac(unittest.TestCase):
     def setUp(self):
