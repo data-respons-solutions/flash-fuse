@@ -75,45 +75,45 @@ class test_CFG5_SEC_CONFIG(test_CFG5_SJC_DISABLE):
         cls.fused = '0x00000002'
         cls.arg = ['--fuse', 'CFG5_SEC_CONFIG']
         
-class test_CFG4_BOOT_CFG1_EMMC(test_CFG5_SJC_DISABLE):
+class test_CFG4_EMMC(test_CFG5_SJC_DISABLE):
     @classmethod
     def setUpClass(cls):
         cls.ocotp = 'HW_OCOTP_CFG4'
         cls.unfused = '0x00000000'
         cls.fused = '0x00000060'
-        cls.arg = ['--fuse', 'CFG4_BOOT_CFG1_EMMC']
+        cls.arg = ['--fuse', 'CFG4_EMMC']
         
-class test_CFG4_BOOT_CFG1_SPI(test_CFG5_SJC_DISABLE):
+class test_CFG4_SERIALROM(test_CFG5_SJC_DISABLE):
     @classmethod
     def setUpClass(cls):
         cls.ocotp = 'HW_OCOTP_CFG4'
         cls.unfused = '0x00000000'
         cls.fused = '0x00000030'
-        cls.arg = ['--fuse', 'CFG4_BOOT_CFG1_SPI']
+        cls.arg = ['--fuse', 'CFG4_SERIALROM']
         
-class test_CFG4_BOOT_CFG2_EMMC_SDHC3(test_CFG5_SJC_DISABLE):
+class test_CFG4_EMMC_SDHC3(test_CFG5_SJC_DISABLE):
     @classmethod
     def setUpClass(cls):
         cls.ocotp = 'HW_OCOTP_CFG4'
         cls.unfused = '0x00000000'
         cls.fused = '0x00001000'
-        cls.arg = ['--fuse', 'CFG4_BOOT_CFG2_EMMC_SDHC3']
+        cls.arg = ['--fuse', 'CFG4_EMMC_SDHC3']
         
-class test_CFG4_BOOT_CFG2_EMMC_8BIT(test_CFG5_SJC_DISABLE):
+class test_CFG4_EMMC_8BIT(test_CFG5_SJC_DISABLE):
     @classmethod
     def setUpClass(cls):
         cls.ocotp = 'HW_OCOTP_CFG4'
         cls.unfused = '0x00000000'
         cls.fused = '0x00004000'
-        cls.arg = ['--fuse', 'CFG4_BOOT_CFG2_EMMC_8BIT']
+        cls.arg = ['--fuse', 'CFG4_EMMC_8BIT']
         
-class test_CFG4_BOOT_CFG4_SPI_SPI2(test_CFG5_SJC_DISABLE):
+class test_CFG4_SERIALROM_SPI2(test_CFG5_SJC_DISABLE):
     @classmethod
     def setUpClass(cls):
         cls.ocotp = 'HW_OCOTP_CFG4'
         cls.unfused = '0x00000000'
         cls.fused = '0x01000000'
-        cls.arg = ['--fuse', 'CFG4_BOOT_CFG4_SPI_SPI2']
+        cls.arg = ['--fuse', 'CFG4_SERIALROM_SPI2']
 
 class test_mac(unittest.TestCase):
     def setUp(self):

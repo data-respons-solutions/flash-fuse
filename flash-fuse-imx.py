@@ -37,23 +37,23 @@ class CFG5_SEC_CONFIG(CFG5_DIR_BT_DIS):
     MASK = 0x00000002
     OCOTP = 'HW_OCOTP_CFG5'
     
-class CFG4_BOOT_CFG1_EMMC(CFG5_DIR_BT_DIS):
+class CFG4_EMMC(CFG5_DIR_BT_DIS):
     MASK = 0x00000060
     OCOTP = 'HW_OCOTP_CFG4'
     
-class CFG4_BOOT_CFG1_SPI(CFG5_DIR_BT_DIS):
+class CFG4_SERIALROM(CFG5_DIR_BT_DIS):
     MASK = 0x00000030
     OCOTP = 'HW_OCOTP_CFG4'
     
-class CFG4_BOOT_CFG2_EMMC_SDHC3(CFG5_DIR_BT_DIS):
+class CFG4_EMMC_SDHC3(CFG5_DIR_BT_DIS):
     MASK = 0x00001000
     OCOTP = 'HW_OCOTP_CFG4'
     
-class CFG4_BOOT_CFG2_EMMC_8BIT(CFG5_DIR_BT_DIS):
+class CFG4_EMMC_8BIT(CFG5_DIR_BT_DIS):
     MASK = 0x00004000
     OCOTP = 'HW_OCOTP_CFG4'
 
-class CFG4_BOOT_CFG4_SPI_SPI2(CFG5_DIR_BT_DIS):
+class CFG4_SERIALROM_SPI2(CFG5_DIR_BT_DIS):
     MASK = 0x01000000
     OCOTP = 'HW_OCOTP_CFG4'
     
@@ -122,24 +122,24 @@ fuse_obj_map = {
         'obj' : CFG5_SEC_CONFIG,
         'arg' : False,
     },
-    'CFG4_BOOT_CFG1_EMMC' : {
-        'obj' : CFG4_BOOT_CFG1_EMMC,
+    'CFG4_EMMC' : {
+        'obj' : CFG4_EMMC,
         'arg' : False,
     },
-    'CFG4_BOOT_CFG1_SPI' : {
-        'obj' : CFG4_BOOT_CFG1_SPI,
+    'CFG4_SERIALROM' : {
+        'obj' : CFG4_SERIALROM,
         'arg' : False,
     },
-    'CFG4_BOOT_CFG2_EMMC_SDHC3' : {
-        'obj' : CFG4_BOOT_CFG2_EMMC_SDHC3,
+    'CFG4_EMMC_SDHC3' : {
+        'obj' : CFG4_EMMC_SDHC3,
         'arg' : False,
     },
-    'CFG4_BOOT_CFG2_EMMC_8BIT' : {
-        'obj' : CFG4_BOOT_CFG2_EMMC_8BIT,
+    'CFG4_EMMC_8BIT' : {
+        'obj' : CFG4_EMMC_8BIT,
         'arg' : False,
     },
-    'CFG4_BOOT_CFG4_SPI_SPI2' : {
-        'obj' : CFG4_BOOT_CFG4_SPI_SPI2,
+    'CFG4_SERIALROM_SPI2' : {
+        'obj' : CFG4_SERIALROM_SPI2,
         'arg' : False,
     },
 }
@@ -152,15 +152,26 @@ if __name__ == "__main__":
 Changes are permanent and irreversible
 
 Available --fuses, optional argument in parenthesis:
-    CFG5_SJC_DISABLE
+    # Boot mode
+    CFG5_BT_FUSE_SEL # Force boot from fuses
+    CFG4_EMMC
+    CFG4_SERIALROM
+    
+    # CFG4_EMMC options
+    CFG4_EMMC_SDHC3
+    CFG4_EMMC_8BIT
+    
+    # CFG4_SERIALROM options
+    CFG4_SERIALROM_SPI2
+    
+    # General
     MAC (lower case, i.e. xx:xx:xx:xx:xx:xx)
     SRK (lower case, comma separated, 8 fields of 8 bytes, i.e. 0x12345678,....)
     CFG5_DIR_BT_DIS
-    CFG5_BT_FUSE_SEL
+    
+    # Security
     CFG5_SEC_CONFIG
-    CFG4_BOOT_CFG1_EMMC
-    CFG4_BOOT_CFG2_EMMC_SDHC3
-    CFG4_BOOT_CFG2_EMMC_8BIT
+    CFG5_SJC_DISABLE
 
 !WARNING!
 
