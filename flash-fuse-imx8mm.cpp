@@ -1,25 +1,28 @@
 #include <iostream>
-#include <fstream>
 #include <string>
 #include <stdexcept>
 #include <cstdio>
 #include <cstring>
 #include <memory>
+#include <fcntl.h>
+#include <unistd.h>
+#include <errno.h>
 
 //FIXME: MAC LOCK_BIT
 
 static std::string read_fuse(const std::string& path, int offset)
 {
+	int fd = open(path.c_str(), O_RDONLY);
+	if (fd < 0)
+		throw std::runtime_error(std::string("Failed opening for reading: ") + path + ": " + std::to_string(errno));
 	char buf[4];
-	std::ifstream ifs(path, std::ifstream::binary);
-	if (!ifs)
-		throw std::runtime_error(std::string("Failed opening for reading: ") + path);
-	ifs.seekg(offset, std::ios::beg);
-	if (!ifs || ifs.eof())
-		throw std::runtime_error(std::string("Failed seeking ") + path + " to: " + std::to_string(offset));
-	ifs.read(buf, 4);
-	if (!ifs)
-		throw std::runtime_error(std::string("Failed reading: ") + path);
+	const ssize_t bytes = pread(fd, buf, 4, offset);
+	const int read_errno = errno;
+	const int r = close(fd);
+	if (bytes != 4)
+		throw std::runtime_error(std::string("Failed reading: ") + path + ": " + std::to_string(read_errno));
+	if (r != 0)
+		throw std::runtime_error(std::string("Failed closing: ") + path + ": " + std::to_string(errno));
 	return std::string(buf, 4);
 }
 
@@ -27,15 +30,16 @@ static void write_fuse(const std::string& path, int offset, const std::string& b
 {
 	if (buf.size() != 4)
 		throw std::runtime_error("internal error, write buf.size() != 4");
-	std::fstream fs(path, std::fstream::binary | std::fstream::out | std::fstream::in);
-	if (!fs)
-		throw std::runtime_error(std::string("Failed opening for writing: ") + path);
-	fs.seekp(offset, std::ios::beg);
-	if (!fs || fs.eof())
-		throw std::runtime_error(std::string("Failed seeking ") + path + " to: " + std::to_string(offset));
-	fs.write(buf.data(), 4);
-	if (!fs)
-		throw std::runtime_error(std::string("Failed reading: ") + path);
+	int fd = open(path.c_str(), O_WRONLY);
+	if (fd < 0)
+		throw std::runtime_error(std::string("Failed opening for reading: ") + path + ": " + std::to_string(errno));
+	const ssize_t bytes = pwrite(fd, buf.data(), buf.size(), offset);
+	const int write_errno = errno;
+	const int r = close(fd);
+	if (bytes != 4)
+		throw std::runtime_error(std::string("Failed writing: ") + path + ": " + std::to_string(write_errno));
+	if (r != 0)
+		throw std::runtime_error(std::string("Failed closing: ") + path + ": " + std::to_string(errno));
 }
 
 class IFuse {
