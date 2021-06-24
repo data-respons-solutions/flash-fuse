@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <cstring>
 #include <memory>
+#include <algorithm>
 #include <fcntl.h>
 #include <unistd.h>
 #include <cerrno>
@@ -60,6 +61,7 @@ public:
 	IFuse& operator=(IFuse&&) = default;
 
 	virtual bool valid_arg(const std::string& arg) const = 0;
+	virtual bool is_fused() const = 0;
 	virtual std::string get() const = 0;
 	virtual void set(const std::string& arg) = 0;
 
@@ -82,6 +84,13 @@ public:
 			throw std::runtime_error("internal error, sscanf ret != 6");
 		}
 		return true;
+	}
+
+	bool is_fused() const override
+	{
+		std::string val = get();
+		val.erase(std::remove(val.begin(), val.end(), ':'), val.end());
+		return std::any_of(val.begin(), val.end(), [](char c){return c != '0';});
 	}
 
 	std::string get() const override
@@ -127,6 +136,7 @@ static void print_usage()
 		<< "  --fuse:      		Name of fuse\n"
 		<< "  --verify:         Only verify, overrides commit\n"
 		<< "  --commit:         Burn fuses\n"
+		<< "  --get:            Get curret fuse value\n"
 		<< "  --path:           Override default ocopt nvmem path\n"
 		<< "\n"
 		<< "Return values:\n"
@@ -156,6 +166,7 @@ int main(int argc, char** argv)
 	std::string fuse_arg;
 	bool verify = false;
 	bool commit = false;
+	bool get = false;
 	std::string path = "/sys/bus/nvmem/devices/imx-ocotp0/nvmem";
 
 	for (int i = 1; i < argc; i++) {
@@ -176,6 +187,10 @@ int main(int argc, char** argv)
 		else
 		if (strcmp("--verify", argv[i]) == 0) {
 			verify = true;
+		}
+		else
+		if (strcmp("--get", argv[i]) == 0) {
+			get = true;
 		}
 		else
 		if (strcmp("--commit", argv[i]) == 0) {
@@ -207,22 +222,30 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
+	if (get) {
+		std::cout << fuse->get() << "\n";
+		return 0;
+	}
+
 	if (!fuse->valid_arg(fuse_arg)) {
 		std::cerr << "invalid --fuse " << fuse_name << " argument\n";
 		return 1;
 	}
-
-	if (verify) {
-		const std::string fused_value = fuse->get();
-		if (fused_value != fuse_arg) {
-			std::cerr << "Fused value \"" << fused_value << "\" not equal to requested \"" << fuse_arg << "\"\n";
-			return 1;
-		}
-		std::cout << "Got: " << fused_value << "\n"; // FIXME DEBUG OUTPUT
+	const std::string fused_value = fuse->get();
+	if (fused_value == fuse_arg) {
 		return 0;
 	}
 
+	if (verify) {
+		std::cerr << "Fused value \"" << fused_value << "\" not equal to requested \"" << fuse_arg << "\"\n";
+		return 1;
+	}
+
 	if (commit) {
+		if (fuse->is_fused()) {
+			std::cerr << "Error -- Already fused: " << fused_value << "\n";
+			return 1;
+		}
 		fuse->set(fuse_arg);
 		return 0;
 	}
