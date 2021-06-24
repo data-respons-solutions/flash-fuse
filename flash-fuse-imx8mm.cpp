@@ -9,7 +9,14 @@
 #include <unistd.h>
 #include <cerrno>
 
-//FIXME: MAC LOCK_BIT
+/*
+ * OCOTP value offset calculation:
+ *   Offset=(Bank * 4 + Word) * 4
+ * Example, MAC0 Bank9 Word 0
+ *   (9 * 4 + 0) * 4 = 144 (0x90)
+ * Example, MAC1 Bank9 Word 1
+ *	 (9 * 4 + 1) * 4 = 148 (0x94)
+ */
 
 static std::string read_fuse(const std::string& path, int offset)
 {
@@ -50,23 +57,51 @@ static void write_fuse(const std::string& path, int offset, const std::string& b
 	}
 }
 
+/*
+ * Default implementation supports simple 1 or 0 fuse.
+ * Override for more complex scenario.
+ */
 class IFuse {
 public:
 	virtual ~IFuse() = default;
-	IFuse(std::string path) : path(std::move(path)) {}
-
+	IFuse(std::string path) : path(std::move(path)) {fuse_mask = 0; fuse_offset = 0;}
+	IFuse(std::string path, int fuse_offset, uint32_t fuse_mask)
+		: path(std::move(path)), fuse_mask(fuse_mask), fuse_offset(fuse_offset) {}
 	IFuse(const IFuse&) = default;
 	IFuse& operator=(const IFuse&) = default;
 	IFuse(IFuse&&) = default;
 	IFuse& operator=(IFuse&&) = default;
 
-	virtual bool valid_arg(const std::string& arg) const = 0;
-	virtual bool is_fused() const = 0;
-	virtual std::string get() const = 0;
-	virtual void set(const std::string& arg) = 0;
+	virtual bool valid_arg(const std::string& arg) const
+	{
+		return arg == "1" || arg == "0";
+	}
+	virtual bool is_fused() const
+	{
+		return get() == "1";
+	}
+	virtual std::string get() const
+	{
+		const std::string str = read_fuse(path, fuse_offset);
+		const uint32_t val = str.at(0) | str.at(1) << 8 | str.at(2) << 16 | str.at(3) << 24;
+		return (val & fuse_mask) == fuse_mask ? "1" : "0";
+	}
+	virtual void set(const std::string& arg)
+	{
+		const uint32_t val = arg == "1" ? fuse_mask : 0;
+		const std::string str = {
+			static_cast<char>(val & 0xff),
+			static_cast<char>(val >> 8 & 0xff),
+			static_cast<char>(val >> 16 & 0xff),
+			static_cast<char>(val >> 24 & 0xff),
+		};
+		write_fuse(path, fuse_offset, str);
+	}
 
 protected:
 	std::string path;
+	uint32_t fuse_mask = 0x4000;
+	int fuse_offset = 0x0;
 };
 
 class FuseMAC : public IFuse {
@@ -124,6 +159,11 @@ private:
 	const int mac1_offset = 0x94;
 };
 
+class FuseLockMAC : public IFuse {
+public:
+	FuseLockMAC(std::string path) : IFuse(std::move(path), 0x0, 0x4000) {}
+};
+
 static void print_usage()
 {
 	std::cout
@@ -145,7 +185,9 @@ static void print_usage()
 		<< "\n"
 		<< "Available --fuses, optional argument in parenthesis: \n"
 		<< "   # General\n"
-		<< "   MAC (lower case, i.e. xx:xx:xx:xx:xx:xx)\n"
+		<< "   MAC          (xx:xx:xx:xx:xx:xx)\n"
+		<< "   # Locks\n"
+		<< "   LOCK_MAC    (1 or 0)\n"
 		<< "\n"
 		<< "WARNING\n"
 		<< "Changes are permanent and irreversible\n"
@@ -156,6 +198,9 @@ static std::unique_ptr<IFuse> make_fuse(const std::string& path, const std::stri
 {
 	if (name == "MAC") {
 		return std::make_unique<FuseMAC>(path);
+	}
+	if (name == "LOCK_MAC") {
+		return std::make_unique<FuseLockMAC>(path);
 	}
 	return std::unique_ptr<IFuse>(nullptr);
 }
