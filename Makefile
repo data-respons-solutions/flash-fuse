@@ -7,7 +7,10 @@ CXXFLAGS += -pedantic
 CXXFLAGS += -DSRC_VERSION=\"$(GIT_VERSION)\"
 
 
-CLANG_TIDY_CHECKS = -checks=-*,modernize-*,cppcoreguidelines-*,readability-*,bugprone-*,clang-analyzer-*
+CLANG_TIDY_CHECKS = -checks=-*,modernize-*,cppcoreguidelines-*,readability-*,bugprone-*,clang-analyzer-*$\
+					,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-bounds-array-to-pointer-decay$\
+					,-cppcoreguidelines-pro-type-vararg
+
 CLANG_TIDY_FILES = flash-fuse-imx8mm.cpp
 
 all: flash-fuse-imx8mm
