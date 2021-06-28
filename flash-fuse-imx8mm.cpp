@@ -256,6 +256,11 @@ int main(int argc, char** argv)
 		}
 	}
 
+	if (!verify && !commit && !get) {
+		std::cerr << "invalid argument, no operation selected (--get,--commit,--verify)\n";
+		return 1;
+	}
+
 	if (fuse_name.empty()) {
 		std::cerr << "invalid argument, no --fuse selected\n";
 		return 1;
