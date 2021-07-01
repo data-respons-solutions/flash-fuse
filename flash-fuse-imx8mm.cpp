@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <stdexcept>
+#include <array>
 #include <cstdio>
 #include <cstring>
 #include <memory>
@@ -18,30 +19,27 @@
  *	 (9 * 4 + 1) * 4 = 148 (0x94)
  */
 
-static std::string read_fuse(const std::string& path, int offset)
+static std::array<uint8_t, 4> read_fuse(const std::string& path, int offset)
 {
 	int fd = open(path.c_str(), O_RDONLY);
 	if (fd < 0) {
 		throw std::runtime_error(std::string("Failed opening for reading: ") + path + ": " + std::to_string(errno));
 	}
-	char buf[4];
-	const ssize_t bytes = pread(fd, buf, 4, offset);
+	std::array<uint8_t, 4> buf {};
+	const ssize_t bytes = pread(fd, buf.data(), buf.size(), offset);
 	const int read_errno = errno;
 	const int r = close(fd);
-	if (bytes != 4) {
+	if (bytes != buf.size()) {
 		throw std::runtime_error(std::string("Failed reading: ") + path + ": " + std::to_string(read_errno));
 	}
 	if (r != 0) {
 		throw std::runtime_error(std::string("Failed closing: ") + path + ": " + std::to_string(errno));
 	}
-	return std::string(buf, 4);
+	return buf;
 }
 
-static void write_fuse(const std::string& path, int offset, const std::string& buf)
+static void write_fuse(const std::string& path, int offset, const std::array<uint8_t, 4>& buf)
 {
-	if (buf.size() != 4) {
-		throw std::runtime_error("internal error, write buf.size() != 4");
-	}
 	int fd = open(path.c_str(), O_WRONLY);
 	if (fd < 0) {
 		throw std::runtime_error(std::string("Failed opening for reading: ") + path + ": " + std::to_string(errno));
@@ -49,7 +47,7 @@ static void write_fuse(const std::string& path, int offset, const std::string& b
 	const ssize_t bytes = pwrite(fd, buf.data(), buf.size(), offset);
 	const int write_errno = errno;
 	const int r = close(fd);
-	if (bytes != 4) {
+	if (bytes != buf.size()) {
 		throw std::runtime_error(std::string("Failed writing: ") + path + ": " + std::to_string(write_errno));
 	}
 	if (r != 0) {
@@ -82,20 +80,20 @@ public:
 	}
 	virtual std::string get() const
 	{
-		const std::string str = read_fuse(path, fuse_offset);
-		const uint32_t val = str.at(0) | str.at(1) << 8 | str.at(2) << 16 | str.at(3) << 24;
+		const std::array<uint8_t, 4> buf = read_fuse(path, fuse_offset);
+		const uint32_t val = buf.at(0) | buf.at(1) << 8 | buf.at(2) << 16 | buf.at(3) << 24;
 		return (val & fuse_mask) == fuse_mask ? "1" : "0";
 	}
 	virtual void set(const std::string& arg)
 	{
 		const uint32_t val = arg == "1" ? fuse_mask : 0;
-		const std::string str = {
-			static_cast<char>(val & 0xff),
-			static_cast<char>(val >> 8 & 0xff),
-			static_cast<char>(val >> 16 & 0xff),
-			static_cast<char>(val >> 24 & 0xff),
+		const std::array<uint8_t, 4> buf = {
+			static_cast<uint8_t>(val & 0xff),
+			static_cast<uint8_t>(val >> 8 & 0xff),
+			static_cast<uint8_t>(val >> 16 & 0xff),
+			static_cast<uint8_t>(val >> 24 & 0xff),
 		};
-		write_fuse(path, fuse_offset, str);
+		write_fuse(path, fuse_offset, buf);
 	}
 
 protected:
@@ -130,10 +128,9 @@ public:
 
 	std::string get() const override
 	{
-		const std::string mac0 = read_fuse(path, mac0_offset);
-		const std::string mac1 = read_fuse(path, mac1_offset);
+		const std::array<uint8_t, 4> mac0 = read_fuse(path, mac0_offset);
+		const std::array<uint8_t, 4> mac1 = read_fuse(path, mac1_offset);
 		char buf[18];
-
 		int r = snprintf(buf, 18, "%02x:%02x:%02x:%02x:%02x:%02x", mac1.at(1), mac1.at(0), mac0.at(3), mac0.at(2), mac0.at(1), mac0.at(0));
 		if (r != 17) {
 			throw std::runtime_error("internal error, snprintf ret != 17");
@@ -143,13 +140,14 @@ public:
 
 	void set(const std::string& arg) override
 	{
-		unsigned char buf[6];
-		int r = sscanf(arg.c_str(), "%02hhX:%02hhX:%02hhX:%02hhX:%02hhX:%02hhX", &buf[5], &buf[4], &buf[3], &buf[2], &buf[1], &buf[0]);
+		std::array<uint8_t, 4> mac0 {};
+		std::array<uint8_t, 4> mac1 {};
+		int r = sscanf(arg.c_str(), "%02hhX:%02hhX:%02hhX:%02hhX:%02hhX:%02hhX", &mac1.at(1), &mac1.at(0), &mac0.at(3), &mac0.at(2), &mac0.at(1), &mac0.at(0));
 		if (r != 6) {
 			throw std::runtime_error("internal error, sscanf ret != 6");
 		}
-		const std::string mac0(reinterpret_cast<char*>(&buf[0]), 4);
-		const std::string mac1 {static_cast<char>(buf[4]), static_cast<char>(buf[5]), 0, 0};
+		mac1.at(2) = 0;
+		mac1.at(3) = 0;
 
 		write_fuse(path, mac0_offset, mac0);
 		write_fuse(path, mac1_offset, mac1);
