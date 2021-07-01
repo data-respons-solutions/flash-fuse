@@ -108,11 +108,11 @@ public:
 
 	bool valid_arg(const std::string& arg) const override
 	{
-		if (arg.size() != 17) {
+		if (arg.size() != 12) {
 			return false;
 		}
 		unsigned char buf[6];
-		int r = sscanf(arg.c_str(), "%02hhX:%02hhX:%02hhX:%02hhX:%02hhX:%02hhX", &buf[0], &buf[1], &buf[2], &buf[3], &buf[4], &buf[5]);
+		int r = sscanf(arg.c_str(), "%02hhX%02hhX%02hhX%02hhX%02hhX%02hhX", &buf[0], &buf[1], &buf[2], &buf[3], &buf[4], &buf[5]);
 		if (r != 6) {
 			throw std::runtime_error("internal error, sscanf ret != 6");
 		}
@@ -130,10 +130,10 @@ public:
 	{
 		const std::array<uint8_t, 4> mac0 = read_fuse(path, mac0_offset);
 		const std::array<uint8_t, 4> mac1 = read_fuse(path, mac1_offset);
-		char buf[18];
-		int r = snprintf(buf, 18, "%02x:%02x:%02x:%02x:%02x:%02x", mac1.at(1), mac1.at(0), mac0.at(3), mac0.at(2), mac0.at(1), mac0.at(0));
-		if (r != 17) {
-			throw std::runtime_error("internal error, snprintf ret != 17");
+		char buf[13];
+		int r = snprintf(buf, 13, "%02X%02X%02X%02X%02X%02X", mac1.at(1), mac1.at(0), mac0.at(3), mac0.at(2), mac0.at(1), mac0.at(0));
+		if (r != 12) {
+			throw std::runtime_error("internal error, snprintf ret != 12");
 		}
 		return std::string(buf, r);
 	}
@@ -142,7 +142,7 @@ public:
 	{
 		std::array<uint8_t, 4> mac0 {};
 		std::array<uint8_t, 4> mac1 {};
-		int r = sscanf(arg.c_str(), "%02hhX:%02hhX:%02hhX:%02hhX:%02hhX:%02hhX", &mac1.at(1), &mac1.at(0), &mac0.at(3), &mac0.at(2), &mac0.at(1), &mac0.at(0));
+		int r = sscanf(arg.c_str(), "%02hhX%02hhX%02hhX%02hhX%02hhX%02hhX", &mac1.at(1), &mac1.at(0), &mac0.at(3), &mac0.at(2), &mac0.at(1), &mac0.at(0));
 		if (r != 6) {
 			throw std::runtime_error("internal error, sscanf ret != 6");
 		}
@@ -169,7 +169,7 @@ static void print_usage()
 		<< "flash-fuse-imx8mm, imx8mm ocotp tool, Data Respons Solutions AB\n"
 		<< "Version: " << SRC_VERSION << "\n"
 		<< "Usage:   " << "flash-fuse-imx8mm [OPTIONS] --fuse NAME ARG\n"
-		<< "Example: " << "flash-fuse-imx8mm --verify --fuse MAC 00:10:30:20:50:a2\n"
+		<< "Example: " << "flash-fuse-imx8mm --verify --fuse MAC 0010302050A2\n"
 		<< "\n"
 		<< "Options:\n"
 		<< "  --fuse:      		Name of fuse\n"
@@ -184,9 +184,9 @@ static void print_usage()
 		<< "\n"
 		<< "Available --fuses, optional argument in parenthesis: \n"
 		<< "   # General\n"
-		<< "   MAC          (xx:xx:xx:xx:xx:xx)\n"
+		<< "   MAC         XXXXXXXXXXXX (capital letters)\n"
 		<< "   # Locks\n"
-		<< "   LOCK_MAC    (1 or 0)\n"
+		<< "   LOCK_MAC    1 or 0\n"
 		<< "\n"
 		<< "WARNING\n"
 		<< "Changes are permanent and irreversible\n"
