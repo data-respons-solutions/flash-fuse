@@ -29,7 +29,7 @@ static std::array<uint8_t, 4> read_fuse(const std::string& path, int offset)
 	const ssize_t bytes = pread(fd, buf.data(), buf.size(), offset);
 	const int read_errno = errno;
 	const int r = close(fd);
-	if (bytes != buf.size()) {
+	if (bytes < 0 || static_cast<std::size_t>(bytes) != buf.size()) {
 		throw std::runtime_error(std::string("Failed reading: ") + path + ": " + std::to_string(read_errno));
 	}
 	if (r != 0) {
@@ -47,7 +47,7 @@ static void write_fuse(const std::string& path, int offset, const std::array<uin
 	const ssize_t bytes = pwrite(fd, buf.data(), buf.size(), offset);
 	const int write_errno = errno;
 	const int r = close(fd);
-	if (bytes != buf.size()) {
+	if (bytes < 0 || static_cast<std::size_t>(bytes) != buf.size()) {
 		throw std::runtime_error(std::string("Failed writing: ") + path + ": " + std::to_string(write_errno));
 	}
 	if (r != 0) {
