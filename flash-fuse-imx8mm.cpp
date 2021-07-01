@@ -133,7 +133,8 @@ public:
 		const std::string mac0 = read_fuse(path, mac0_offset);
 		const std::string mac1 = read_fuse(path, mac1_offset);
 		char buf[18];
-		int r = snprintf(buf, 18, "%02x:%02x:%02x:%02x:%02x:%02x", mac0.at(1), mac0.at(0), mac0.at(3), mac0.at(2), mac1.at(1), mac1.at(0));
+
+		int r = snprintf(buf, 18, "%02x:%02x:%02x:%02x:%02x:%02x", mac1.at(1), mac1.at(0), mac0.at(3), mac0.at(2), mac0.at(1), mac0.at(0));
 		if (r != 17) {
 			throw std::runtime_error("internal error, snprintf ret != 17");
 		}
@@ -143,7 +144,7 @@ public:
 	void set(const std::string& arg) override
 	{
 		unsigned char buf[6];
-		int r = sscanf(arg.c_str(), "%02hhX:%02hhX:%02hhX:%02hhX:%02hhX:%02hhX", &buf[1], &buf[0], &buf[3], &buf[2], &buf[5], &buf[4]);
+		int r = sscanf(arg.c_str(), "%02hhX:%02hhX:%02hhX:%02hhX:%02hhX:%02hhX", &buf[5], &buf[4], &buf[3], &buf[2], &buf[1], &buf[0]);
 		if (r != 6) {
 			throw std::runtime_error("internal error, sscanf ret != 6");
 		}
