@@ -116,7 +116,7 @@ int main(int argc, char** argv)
 	}
 
 	if (commit) {
-		if (fused_value != "NONE") {
+		if (!fuse->is_fuseable(fuse_arg)) {
 			std::cerr << "Error -- Already fused: " << fused_value << "\n";
 			return 1;
 		}

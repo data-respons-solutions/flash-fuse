@@ -44,22 +44,31 @@ static void write_fuse(const std::string& path, int offset, const std::array<uin
 	}
 }
 
-FlagFuse::FlagFuse(std::string nvmem, int offset, std::map<std::string, uint32_t> flags)
-	: mnvmem(std::move(nvmem)), moffset(offset), mflags(std::move(flags))
+static uint32_t read_bank(const std::string& nvmem, int offset)
+{
+	const std::array<uint8_t, 4> buf = read_fuse(nvmem, offset);
+	const uint32_t val = buf.at(0) | buf.at(1) << 8 | buf.at(2) << 16 | buf.at(3) << 24;
+	return val;
+}
+FlagFuse::FlagFuse(std::string nvmem, int offset, uint32_t mask, std::map<std::string, uint32_t> flags)
+	: mnvmem(std::move(nvmem)), moffset(offset), mmask(mask), mflags(std::move(flags))
 {}
 bool FlagFuse::valid_arg(const std::string& arg) const
 {
 	return mflags.contains(arg);
 }
+bool FlagFuse::is_fuseable(const std::string& arg) const
+{
+	return ((read_bank(mnvmem, moffset) & mmask) & (~mflags.at(arg))) == 0;
+}
 std::string FlagFuse::get() const
 {
-	const std::array<uint8_t, 4> buf = read_fuse(mnvmem, moffset);
-	const uint32_t val = buf.at(0) | buf.at(1) << 8 | buf.at(2) << 16 | buf.at(3) << 24;
-	for (auto& [name, mask] : mflags) {
-		if ((val & mask) == mask)
+	const uint32_t val = read_bank(mnvmem, moffset) & mmask;
+	for (const auto& [name, bits] : mflags) {
+		if (val == bits)
 			return name;
 	}
-	return "NONE";
+	return "UNKNOWN";
 }
 void FlagFuse::set(const std::string& arg)
 {
@@ -74,8 +83,8 @@ void FlagFuse::set(const std::string& arg)
 }
 
 MACFuse::MACFuse(std::string nvmem, int offset1, int offset2)
-	: mnvmem(std::move(nvmem)), moffset1(offset1), moffset2(offset2)  {}
-
+	: mnvmem(std::move(nvmem)), moffset1(offset1), moffset2(offset2)
+{}
 bool MACFuse::valid_arg(const std::string& arg) const
 {
 	if (arg.size() != 12)
@@ -86,14 +95,16 @@ bool MACFuse::valid_arg(const std::string& arg) const
 		throw std::runtime_error("internal error, sscanf ret != 6");
 	return true;
 }
-
+bool MACFuse::is_fuseable(const std::string& arg) const
+{
+	(void) arg;
+	// Lazy implementation by simply checking for all zero
+	return get() == "000000000000";
+}
 std::string MACFuse::get() const
 {
 	const std::array<uint8_t, 4> mac0 = read_fuse(mnvmem, moffset1);
 	const std::array<uint8_t, 4> mac1 = read_fuse(mnvmem, moffset2);
-	if (std::all_of(mac0.begin(), mac0.end(), [](auto val){return val == 0;})
-			&& std::all_of(mac1.begin(), mac1.end(), [](auto val){return val == 0;}))
-		return "NONE";
 	char buf[13];
 	int r = snprintf(buf, 13, "%02X%02X%02X%02X%02X%02X", mac1.at(1), mac1.at(0), mac0.at(3), mac0.at(2), mac0.at(1), mac0.at(0));
 	if (r != 12)

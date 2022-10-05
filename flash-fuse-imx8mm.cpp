@@ -24,7 +24,7 @@ std::unique_ptr<IFuse> make_fuse(std::string nvmem, const std::string& name)
 			{"OP", 0x8000},
 			{"WP+OP", 0xC000},
 		};
-		return std::make_unique<FlagFuse>(std::move(nvmem), 0x0, flags);
+		return std::make_unique<FlagFuse>(std::move(nvmem), 0x0, 0xC000, flags);
 	}
 	return {};
 }

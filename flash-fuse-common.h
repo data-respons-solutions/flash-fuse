@@ -31,6 +31,8 @@ public:
 
 	/* Check if argument valid */
 	virtual bool valid_arg(const std::string& arg) const = 0;
+	/* Check if argument can be set on top of currently fused value */
+	virtual bool is_fuseable(const std::string& arg) const = 0;
 	/* Return fused value */
 	virtual std::string get() const = 0;
 	/* Write arg */
@@ -42,18 +44,33 @@ std::unique_ptr<IFuse> make_fuse(std::string nvmem, const std::string& name);
 /* For print_usage*/
 std::string available_fuses();
 
-/* Check fuse against masks in flags parameter */
+/* Check fuse against bits in flags map.
+ *
+ * Will read fuse bank from offset, mask with ctor argument mask
+ * and compare with bits value in flags vector. I.e:
+ *    for (const auto& [name, bits] : flags)
+ *        if (fuse_value & mask) == bits
+ *           return name;
+ *    return "UNKNOWN"
+ * */
 class FlagFuse : public IFuse {
 public:
-	FlagFuse(std::string nvmem, int offset, std::map<std::string, uint32_t> flags);
+	struct Flag {
+		std::string name;
+		uint32_t bits;
+	};
+
+	FlagFuse(std::string nvmem, int offset, uint32_t mask, std::map<std::string, uint32_t> flags);
 
 	bool valid_arg(const std::string& arg) const override;
+	bool is_fuseable(const std::string& arg) const override;
 	std::string get() const override;
 	void set(const std::string& arg) override;
 
 private:
 	std::string mnvmem;
 	int moffset;
+	uint32_t mmask;
 	std::map<std::string, uint32_t> mflags;
 };
 
@@ -62,6 +79,7 @@ public:
 	MACFuse(std::string nvmem, int offset1, int offset2);
 
 	bool valid_arg(const std::string& arg) const override;
+	bool is_fuseable(const std::string& arg) const override;
 	std::string get() const override;
 	void set(const std::string& arg) override;
 
