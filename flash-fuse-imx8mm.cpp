@@ -3,6 +3,17 @@
 #include <memory>
 #include "flash-fuse-common.h"
 
+std::string available_fuses()
+{
+	return {
+		"Available --fuses, optional argument in parenthesis: \n"
+		"   # General\n"
+		"   MAC         XXXXXXXXXXXX (capital letters)\n"
+		"   # Locks\n"
+		"   LOCK_MAC    WP or OP\n"
+		"\n"};
+}
+
 std::unique_ptr<IFuse> make_fuse(std::string nvmem, const std::string& name)
 {
 	if (name == "MAC")

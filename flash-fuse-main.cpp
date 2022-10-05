@@ -22,12 +22,7 @@ static void print_usage()
 		<< "  0 if OK\n"
 		<< "  1 for error or test failed\n"
 		<< "\n"
-		<< "Available --fuses, optional argument in parenthesis: \n"
-		<< "   # General\n"
-		<< "   MAC         XXXXXXXXXXXX (capital letters)\n"
-		<< "   # Locks\n"
-		<< "   LOCK_MAC    1 or 0\n"
-		<< "\n"
+		<< available_fuses()
 		<< "WARNING\n"
 		<< "Changes are permanent and irreversible\n"
 		<< "WARNING\n";

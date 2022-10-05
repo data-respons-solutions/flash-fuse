@@ -16,6 +16,8 @@ public:
 
 /* Define per platform */
 std::unique_ptr<IFuse> make_fuse(std::string nvmem, const std::string& name);
+/* For print_usage*/
+std::string available_fuses();
 
 /* Check fuse against masks in flags parameter */
 class FlagFuse : public IFuse {
