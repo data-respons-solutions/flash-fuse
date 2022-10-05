@@ -35,7 +35,7 @@ def check_all_zero(file, exceptions):
             i += 4
                 
 def flash_fuse(path, arglist):
-    args = ['./flash-fuse-imx8mm', '--path' , path]
+    args = ['./build/flash-fuse-imx8mm', '--path' , path]
     args.extend(arglist)
     return subprocess.run(args, capture_output=True, text=True)
 
@@ -109,34 +109,35 @@ class test_lock_mac(unittest.TestCase):
         self.tmpdir.cleanup()
     def test_burn(self):
         set_value(self.nvmem, self.fuse_offset, self.fuse_unset)
-        r = flash_fuse(self.nvmem, ['--fuse', self.fuse_name, '1', '--commit'])
+        r = flash_fuse(self.nvmem, ['--fuse', self.fuse_name, 'WP', '--commit'])
         self.assertEqual(0, r.returncode)
         self.assertEqual(get_value(self.nvmem, self.fuse_offset), self.fuse_set)
+        print(get_value(self.nvmem, self.fuse_offset))
     def test_burn_already_fused(self):
         set_value(self.nvmem, self.fuse_offset, self.fuse_set)
-        r = flash_fuse(self.nvmem, ['--fuse', self.fuse_name, '1', '--commit'])
+        r = flash_fuse(self.nvmem, ['--fuse', self.fuse_name, 'WP', '--commit'])
         self.assertEqual(0, r.returncode )
         self.assertEqual(get_value(self.nvmem, self.fuse_offset), self.fuse_set)
     def test_get_0(self):
         set_value(self.nvmem, self.fuse_offset, self.fuse_unset)
         r = flash_fuse(self.nvmem, ['--fuse', self.fuse_name, '--get'])
         self.assertEqual(0, r.returncode)
-        self.assertEqual('0\n', r.stdout)
+        self.assertEqual('NONE\n', r.stdout)
         self.assertEqual(get_value(self.nvmem, self.fuse_offset), self.fuse_unset)
     def test_get_1(self):
         set_value(self.nvmem, self.fuse_offset, self.fuse_set)
         r = flash_fuse(self.nvmem, ['--fuse', self.fuse_name, '--get'])
         self.assertEqual(0, r.returncode)
-        self.assertEqual('1\n', r.stdout)
+        self.assertEqual('WP\n', r.stdout)
         self.assertEqual(get_value(self.nvmem, self.fuse_offset), self.fuse_set)
     def test_verify_0(self):
         set_value(self.nvmem, self.fuse_offset, self.fuse_unset)
-        r = flash_fuse(self.nvmem, ['--fuse', self.fuse_name, '0', '--verify'])
+        r = flash_fuse(self.nvmem, ['--fuse', self.fuse_name, 'NONE', '--verify'])
         self.assertEqual(0, r.returncode )
         self.assertEqual(get_value(self.nvmem, self.fuse_offset), self.fuse_unset)
     def test_verify_1(self):
         set_value(self.nvmem, self.fuse_offset, self.fuse_set)
-        r = flash_fuse(self.nvmem, ['--fuse', self.fuse_name, '1', '--verify'])
+        r = flash_fuse(self.nvmem, ['--fuse', self.fuse_name, 'WP', '--verify'])
         self.assertEqual(0, r.returncode )
         self.assertEqual(get_value(self.nvmem, self.fuse_offset), self.fuse_set)
 
