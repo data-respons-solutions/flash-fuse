@@ -55,11 +55,6 @@ std::string available_fuses();
  * */
 class FlagFuse : public IFuse {
 public:
-	struct Flag {
-		std::string name;
-		uint32_t bits;
-	};
-
 	FlagFuse(std::string nvmem, int offset, uint32_t mask, std::map<std::string, uint32_t> flags);
 
 	bool valid_arg(const std::string& arg) const override;
