@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <cerrno>
 #include <cstdio>
+#include <cinttypes>
 #include "flash-fuse-common.h"
 #include "log.h"
 
@@ -54,6 +55,19 @@ static uint32_t read_bank(const std::string& nvmem, int offset)
 	pr_dbg("read: 0x%08x at offset 0x%x from %s\n", val, offset, nvmem.c_str());
 	return val;
 }
+
+static void write_bank(const std::string& nvmem, int offset, uint32_t val)
+{
+	pr_dbg("write: 0x%08x at offset 0x%x to %s\n", val, offset, nvmem.c_str());
+	const std::array<uint8_t, 4> buf = {
+		static_cast<uint8_t>(val & 0xff),
+		static_cast<uint8_t>(val >> 8 & 0xff),
+		static_cast<uint8_t>(val >> 16 & 0xff),
+		static_cast<uint8_t>(val >> 24 & 0xff),
+	};
+	write_fuse(nvmem, offset, buf);
+}
+
 FlagFuse::FlagFuse(std::string nvmem, int offset, uint32_t mask, std::map<std::string, uint32_t> flags)
 	: mnvmem(std::move(nvmem)), moffset(offset), mmask(mask), mflags(std::move(flags))
 {}
@@ -76,14 +90,7 @@ std::string FlagFuse::get() const
 }
 void FlagFuse::set(const std::string& arg)
 {
-	const uint32_t val = mflags.at(arg);
-	const std::array<uint8_t, 4> buf = {
-		static_cast<uint8_t>(val & 0xff),
-		static_cast<uint8_t>(val >> 8 & 0xff),
-		static_cast<uint8_t>(val >> 16 & 0xff),
-		static_cast<uint8_t>(val >> 24 & 0xff),
-	};
-	write_fuse(mnvmem, moffset, buf);
+	write_bank(mnvmem, moffset, mflags.at(arg));
 }
 
 MACFuse::MACFuse(std::string nvmem, int offset1, int offset2)
@@ -126,3 +133,48 @@ void MACFuse::set(const std::string& arg)
 	write_fuse(mnvmem, moffset1, mac0);
 	write_fuse(mnvmem, moffset2, mac1);
 }
+
+SRKFuse::SRKFuse(std::string nvmem, std::array<int, 8> offset)
+	: mnvmem(std::move(nvmem)), moffset(offset)
+{}
+
+bool SRKFuse::valid_arg(const std::string& arg) const
+{
+	if (arg.size() != 87)
+		return false;
+	uint32_t buf[8];
+	const int r = sscanf(arg.c_str(), "0X%08" PRIX32 ",0X%08" PRIX32 ",0X%08" PRIX32 ",0X%08" PRIX32 ",0X%08" PRIX32 ",0X%08" PRIX32 ",0X%08" PRIX32 ",0X%08" PRIX32 "",
+					&buf[0], &buf[1], &buf[2], &buf[3], &buf[4], &buf[5], &buf[6], &buf[7]);
+	if (r != 8)
+		throw std::runtime_error("internal error, sscanf ret != 8");
+	return true;
+}
+bool SRKFuse::is_fuseable(const std::string& arg) const
+{
+	(void) arg;
+	// Lazy implementation by simply checking for all zero
+	return get() == "0X00000000,0X00000000,0X00000000,0X00000000,0X00000000,0X00000000,0X00000000,0X00000000";
+}
+std::string SRKFuse::get() const
+{
+	std::vector<uint32_t> v;
+	for (int offset : moffset)
+		v.push_back(read_bank(mnvmem, offset));
+	char buf[88];
+	const int r = snprintf(buf, 88, "0X%08X,0X%08X,0X%08X,0X%08X,0X%08X,0X%08X,0X%08X,0X%08X",
+							v.at(0), v.at(1), v.at(2), v.at(3), v.at(4), v.at(5), v.at(6), v.at(7));
+	if (r != 87)
+		throw std::runtime_error("internal error, snprintf ret != 87");
+	return {buf};
+}
+void SRKFuse::set(const std::string& arg)
+{
+	uint32_t buf[8];
+	const int r = sscanf(arg.c_str(), "0X%08" PRIX32 ",0X%08" PRIX32 ",0X%08" PRIX32 ",0X%08" PRIX32 ",0X%08" PRIX32 ",0X%08" PRIX32 ",0X%08" PRIX32 ",0X%08" PRIX32 "",
+					&buf[0], &buf[1], &buf[2], &buf[3], &buf[4], &buf[5], &buf[6], &buf[7]);
+	if (r != 8)
+		throw std::runtime_error("internal error, sscanf ret != 8");
+	for (int i = 0; i < 8; ++i)
+		write_bank(mnvmem, moffset.at(i), buf[i]);
+}
+

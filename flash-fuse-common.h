@@ -85,7 +85,20 @@ public:
 
 private:
 	std::string mnvmem;
-	const int moffset1 = 0x90;
-	const int moffset2 = 0x94;
+	const int moffset1;
+	const int moffset2;
 };
 
+class SRKFuse : public IFuse {
+public:
+	SRKFuse(std::string nvmem, std::array<int, 8> offset);
+
+	bool valid_arg(const std::string& arg) const override;
+	bool is_fuseable(const std::string& arg) const override;
+	std::string get() const override;
+	void set(const std::string& arg) override;
+
+private:
+	std::string mnvmem;
+	std::array<int, 8> moffset;
+};
