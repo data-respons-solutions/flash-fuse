@@ -8,7 +8,7 @@
  * imx6dl:
  *
  * OCOTP value offset calculation:
- *   Offset=(Bank * 8 + Word) * 4
+ *   Offset=(Bank * 8 + Word)
  * Example, MAC0 Bank4 Word 2
  *   (4 * 8 + 2) = 34 (0x22)
  * Example, MAC1 Bank4 Word 3
