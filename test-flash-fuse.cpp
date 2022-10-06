@@ -58,7 +58,7 @@ public:
 	}
 
 	uint32_t read_bank(int offset) {
-		auto v = read(offset, 4);
+		auto v = read(offset * 4, 4);
 		return static_cast<uint32_t>(v.at(0) | v.at(1) << 8 | v.at(2) << 16 | v.at(3) << 24);
 	}
 
@@ -69,7 +69,7 @@ public:
 			static_cast<uint8_t>(value >> 16 & 0xff),
 			static_cast<uint8_t>(value >> 24 & 0xff),
 		};
-		write(offset, buf);
+		write(offset * 4, buf);
 	}
 
 	void fill(int bytes, uint8_t value)
