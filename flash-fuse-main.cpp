@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cstring>
 #include "flash-fuse-common.h"
+#include "log.h"
 
 static void print_usage()
 {
@@ -17,6 +18,7 @@ static void print_usage()
 		<< "  --commit:         Burn fuses\n"
 		<< "  --get:            Get curret fuse value\n"
 		<< "  --path:           Override default ocopt nvmem path\n"
+		<< "  --debug:           Enable debug mode\n"
 		<< "\n"
 		<< "Return values:\n"
 		<< "  0 if OK\n"
@@ -69,6 +71,10 @@ int main(int argc, char** argv)
 		if (strcmp("--help", argv[i]) == 0 || strcmp("-h", argv[i]) == 0) {
 			print_usage();
 			return 1;
+		}
+		else
+		if (strcmp("--debug", argv[1]) == 0) {
+			enable_debug();
 		}
 		else
 		if ('-' == argv[i][0]) {

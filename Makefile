@@ -33,13 +33,13 @@ test: $(BUILD)/test-flash-fuse
 		fi \
 	done
 
-$(BUILD)/flash-fuse-imx8mm: $(addprefix $(BUILD)/, flash-fuse-imx8mm.o flash-fuse-common.o flash-fuse-main.o)
+$(BUILD)/flash-fuse-imx8mm: $(addprefix $(BUILD)/, flash-fuse-imx8mm.o flash-fuse-common.o flash-fuse-main.o log.o)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 	
-$(BUILD)/flash-fuse-imx6dl: $(addprefix $(BUILD)/, flash-fuse-imx6dl.o flash-fuse-common.o flash-fuse-main.o)
+$(BUILD)/flash-fuse-imx6dl: $(addprefix $(BUILD)/, flash-fuse-imx6dl.o flash-fuse-common.o flash-fuse-main.o log.o)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 	
-$(BUILD)/test-flash-fuse: $(addprefix $(BUILD)/, test-flash-fuse.o flash-fuse-common.o)
+$(BUILD)/test-flash-fuse: $(addprefix $(BUILD)/, test-flash-fuse.o flash-fuse-common.o log.o)
 	$(CXX) -o $@ $^ $(LDFLAGS) -lCatch2Main -lCatch2
 	
 $(BUILD)/%.o: %.cpp 
