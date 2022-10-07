@@ -15,7 +15,7 @@ static std::array<uint8_t, 4> read_fuse(const std::string& path, int offset)
 	int fd = open(path.c_str(), O_RDONLY);
 	if (fd < 0)
 		throw std::runtime_error(std::string("Failed opening for reading: ") + path + ": " + std::to_string(errno));
-	if (lseek(fd, offset * 4, SEEK_SET) == (off_t) - 1) {
+	if (lseek(fd, offset, SEEK_SET) == (off_t) - 1) {
 		close(fd);
 		throw std::runtime_error(std::string("Failed seeking offset: ") + path + ": " + std::to_string(errno));
 	}
@@ -35,7 +35,7 @@ static void write_fuse(const std::string& path, int offset, const std::array<uin
 	int fd = open(path.c_str(), O_WRONLY);
 	if (fd < 0)
 		throw std::runtime_error(std::string("Failed opening for reading: ") + path + ": " + std::to_string(errno));
-	if (lseek(fd, offset * 4, SEEK_SET) == (off_t) - 1) {
+	if (lseek(fd, offset, SEEK_SET) == (off_t) - 1) {
 		close(fd);
 		throw std::runtime_error(std::string("Failed seeking offset: ") + path + ": " + std::to_string(errno));
 	}
