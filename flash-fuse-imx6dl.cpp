@@ -7,12 +7,33 @@
  * Offset calculations
  * *
  * OCOTP value offset calculation:
- *   Offset=(Bank * 8 + Word)
+ *   Offset=(Bank * 8 + Word) * 4
  * Example, MAC0 Bank4 Word 2
- *   (4 * 8 + 2) = 34 (0x22)
+ *   (4 * 8 + 2) * 4 = 136 (0x88)
  * Example, MAC1 Bank4 Word 3
- *	 (4 * 8 + 3) = 35 (0x23)
+ *	 (4 * 8 + 3) * 4 = 140 (0x8C)
  */
+
+struct BANK {
+	constexpr BANK(int v) : value(v) {}
+	int value;
+};
+
+struct WORD {
+	constexpr WORD(int w) : value(w) {}
+	int value;
+};
+
+constexpr int OFFSET(BANK bank, WORD word)
+{
+	constexpr int word_per_bank = 8;
+	constexpr int byte_per_word = 4;
+	return ((bank.value * word_per_bank) + word.value) * byte_per_word;
+}
+
+constexpr int OCOTP_LOCK = OFFSET(BANK(0), WORD(0));
+constexpr int OCOTP_CFG4 = OFFSET(BANK(0), WORD(5));
+constexpr int OCOTP_CFG5 = OFFSET(BANK(0), WORD(6));
 
 struct FlagFuseDesc {
 	int offset;
@@ -20,62 +41,58 @@ struct FlagFuseDesc {
 	std::map<std::string, uint32_t> bits;
 };
 
-constexpr int OCOTP_LOCK = 0x0;
-constexpr int OCOTP_CFG4 = 0x5;
-constexpr int OCOTP_CFG5 = 0x6;
-
 const std::map<std::string, FlagFuseDesc> flag_fuses = {
-	{"MAC_LOCK", {.offset = OCOTP_LOCK, .mask = 0x300, .bits = {
+	{"MAC_LOCK", {.offset = OCOTP_LOCK, .mask = MASK(8, 9), .bits = {
 			{"NONE", 0x0},
-			{"WP", 0x100},
-			{"OP", 0x200},
-			{"WP+OP", 0x300},
+			{"WP", BIT(8)},
+			{"OP", BIT(9)},
+			{"WP+OP", MASK(8, 9)},
 		}
 	}},
-	{"BT_FUSE_SEL", {.offset = OCOTP_CFG5, .mask = 0x10, .bits = {
+	{"BT_FUSE_SEL", {.offset = OCOTP_CFG5, .mask = BIT(4), .bits = {
 			{"BOARD", 0x0},
-			{"FUSE", 0x10},
+			{"FUSE", BIT(4)},
 		}
 	}},
-	{"SJC_DISABLE", {.offset = OCOTP_CFG5, .mask = 0x100000, .bits = {
+	{"SJC_DISABLE", {.offset = OCOTP_CFG5, .mask = BIT(20), .bits = {
 			{"SJC_ENABLED", 0x0},
-			{"SJC_DISABLED", 0x100000},
+			{"SJC_DISABLED", BIT(20)},
 		}
 	}},
-	{"SEC_DISABLE", {.offset = OCOTP_CFG5, .mask = 0x2, .bits = {
+	{"SEC_DISABLE", {.offset = OCOTP_CFG5, .mask = BIT(1), .bits = {
 			{"OPEN", 0x0},
-			{"CLOSED", 0x2},
+			{"CLOSED", BIT(1)},
 		}
 	}},
-	{"DIR_BT_DIS", {.offset = OCOTP_CFG5, .mask = 0x8, .bits = {
+	{"DIR_BT_DIS", {.offset = OCOTP_CFG5, .mask = BIT(3), .bits = {
 			{"NXP_RESERVED", 0x0},
-			{"PRODUCTION", 0x8},
+			{"PRODUCTION",  BIT(3)},
 		}
 	}},
 	/* nxp reference manual states some boot devices ignore some of the bits.
 	 * We assume bits were written correctly and simply check them all */
-	{"BOOT_DEVICE", {.offset = OCOTP_CFG4, .mask = 0xf8, .bits = {
+	{"BOOT_DEVICE", {.offset = OCOTP_CFG4, .mask = MASK(3, 7), .bits = {
 			{"NOR_Flash", 0x0},
-			{"OneNAND", 0x8},
-			{"SERIAL_ROM", 0x30},
-			{"SD/eSD", 0x40},
-			{"MMC/eMMC", 0x60},
-			{"NAND_Flash", 0x80},
+			{"OneNAND", BIT(3)},
+			{"SERIAL_ROM", MASK(4, 5)},
+			{"SD/eSD", BIT(6)},
+			{"MMC/eMMC", MASK(5, 6)},
+			{"NAND_Flash", BIT(7)},
 		}
 	}},
-	{"BOOT_MMC_PORT", {.offset = OCOTP_CFG4, .mask = 0x1800, .bits = {
+	{"BOOT_MMC_PORT", {.offset = OCOTP_CFG4, .mask = MASK(11, 12), .bits = {
 			{"uSDHC1", 0x0},
-			{"uSDHC2", 0x800},
-			{"uSDHC3", 0x1000},
-			{"uSDHC4", 0x1800},
+			{"uSDHC2", BIT(11)},
+			{"uSDHC3", BIT(12)},
+			{"uSDHC4", MASK(11, 12)},
 		}
 	}},
-	{"BOOT_MMC_WIDTH", {.offset = OCOTP_CFG5, .mask = 0xe000, .bits = {
+	{"BOOT_MMC_WIDTH", {.offset = OCOTP_CFG5, .mask = MASK(13, 15), .bits = {
 			{"1-BIT", 0x0},
-			{"4-BIT", 0x2000},
-			{"8-BIT", 0x4000},
-			{"4-BIT", 0xa000},
-			{"8-BIT-DDR", 0xc000},
+			{"4-BIT", BIT(13)},
+			{"8-BIT", BIT(14)},
+			{"4-BIT", BIT(13) | BIT(15)},
+			{"8-BIT-DDR", MASK(14, 15)},
 		}
 	}},
 };

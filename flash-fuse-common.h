@@ -2,6 +2,19 @@
 #include <map>
 #include <memory>
 
+constexpr uint32_t BIT(int n)
+{
+	return 1 << n;
+}
+
+constexpr uint32_t MASK(int start, int end)
+{
+	uint32_t ret = 0;
+	for (int n = start; n <= end; n++)
+		ret |= 1 << n;
+	return ret;
+}
+
 class IFuse {
 public:
 	virtual ~IFuse() = default;
