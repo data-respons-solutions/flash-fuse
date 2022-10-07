@@ -10,7 +10,6 @@ struct FlagFuseDesc {
 };
 
 constexpr int OCOTP_HW_OCOTP_LOCK = 0x0;		// 0x400
-constexpr int OCOTP_HW_OCOTP_TESTER4 = 0x14;	// 0x450
 constexpr int OCOTP_HW_OCOTP_BOOT_CFG0 = 0x1c;	// 0x470
 constexpr int OCOTP_HW_OCOTP_BOOT_CFG1 = 0x20;	// 0x480
 constexpr int OCOTP_HW_OCOTP_SRK0 = 0x60;		// 0x580
@@ -52,8 +51,8 @@ const std::map<std::string, FlagFuseDesc> flag_fuses = {
 		}
 	}},
 	{"BT_FUSE_SEL", {.offset = OCOTP_HW_OCOTP_BOOT_CFG0, .mask = 0x10000000, .bits = {
-			{"BOARD", 0x0},
-			{"FUSE", 0x10000000},
+			{"NONE", 0x0},
+			{"PROGRAMMED", 0x10000000},
 		}
 	}},
 	{"SJC_DISABLE", {.offset = OCOTP_HW_OCOTP_BOOT_CFG0, .mask = 0x200000, .bits = {
@@ -83,6 +82,11 @@ const std::map<std::string, FlagFuseDesc> flag_fuses = {
 			{"FLEXSPI-HYPERFLASH", 0x7},
 			{"ECSPI", 0x8},
 
+		}
+	}},
+	{"FORCE_BT_FROM_FUSE", {.offset = OCOTP_HW_OCOTP_BOOT_CFG1, .mask = 0x100000, .bits = {
+			{"DISABLED", 0x0},
+			{"ENABLED", 0x100000},
 		}
 	}},
 	{"BOOT_ECSPI_PORT", {.offset = OCOTP_HW_OCOTP_BOOT_CFG1, .mask = 0xe0000000, .bits = {
