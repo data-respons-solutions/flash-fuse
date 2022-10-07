@@ -3,6 +3,17 @@
 #include <memory>
 #include "flash-fuse-common.h"
 
+/*
+ * Offset calculations
+ *
+ * OCOTP value offset calculation:
+ *   Offset=(Bank * 4 + Word) * 4
+ * Example, MAC0 Bank9 Word 0
+ *   (9 * 4 + 0) * 4 = 144 (0x90)
+ * Example, MAC1 Bank9 Word 1
+ *	 (9 * 4 + 1) * 4 = 148 (0x94)
+ */
+
 std::string available_fuses()
 {
 	return {

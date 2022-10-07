@@ -3,6 +3,17 @@
 #include <memory>
 #include "flash-fuse-common.h"
 
+/*
+ * Offset calculations
+ * *
+ * OCOTP value offset calculation:
+ *   Offset=(Bank * 8 + Word)
+ * Example, MAC0 Bank4 Word 2
+ *   (4 * 8 + 2) = 34 (0x22)
+ * Example, MAC1 Bank4 Word 3
+ *	 (4 * 8 + 3) = 35 (0x23)
+ */
+
 struct FlagFuseDesc {
 	int offset;
 	uint32_t mask;
