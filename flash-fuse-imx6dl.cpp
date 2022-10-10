@@ -31,9 +31,19 @@ constexpr int OFFSET(BANK bank, WORD word)
 	return ((bank.value * word_per_bank) + word.value) * byte_per_word;
 }
 
-constexpr int OCOTP_LOCK = OFFSET(BANK(0), WORD(0));
-constexpr int OCOTP_CFG4 = OFFSET(BANK(0), WORD(5));
-constexpr int OCOTP_CFG5 = OFFSET(BANK(0), WORD(6));
+constexpr int OCOTP_LOCK =		OFFSET(BANK(0), WORD(0));
+constexpr int OCOTP_CFG4 =		OFFSET(BANK(0), WORD(5));
+constexpr int OCOTP_CFG5 =		OFFSET(BANK(0), WORD(6));
+constexpr int OCOTP_SRK0 =		OFFSET(BANK(3), WORD(0));
+constexpr int OCOTP_SRK1 =		OFFSET(BANK(3), WORD(1));
+constexpr int OCOTP_SRK2 =		OFFSET(BANK(3), WORD(2));
+constexpr int OCOTP_SRK3 =		OFFSET(BANK(3), WORD(3));
+constexpr int OCOTP_SRK4 =		OFFSET(BANK(3), WORD(4));
+constexpr int OCOTP_SRK5 =		OFFSET(BANK(3), WORD(5));
+constexpr int OCOTP_SRK6 =		OFFSET(BANK(3), WORD(6));
+constexpr int OCOTP_SRK7 =		OFFSET(BANK(3), WORD(7));
+constexpr int OCOTP_MAC0 =		OFFSET(BANK(4), WORD(2));
+constexpr int OCOTP_MAC1 =		OFFSET(BANK(4), WORD(3));
 
 struct FlagFuseDesc {
 	int offset;
@@ -123,9 +133,11 @@ std::string available_fuses()
 std::unique_ptr<IFuse> make_fuse(std::string nvmem, const std::string& name)
 {
 	if (name == "MAC")
-		return std::make_unique<MACFuse>(std::move(nvmem), 0x22, 0x23);
+		return std::make_unique<MACFuse>(std::move(nvmem), OCOTP_MAC0, OCOTP_MAC1);
 	if (name == "SRK")
-		return std::make_unique<SRKFuse>(std::move(nvmem), std::array<int, 8>{0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f});
+		return std::make_unique<SRKFuse>(std::move(nvmem), std::array<int, 8>{
+			OCOTP_SRK0, OCOTP_SRK1, OCOTP_SRK2, OCOTP_SRK3,
+			OCOTP_SRK4, OCOTP_SRK5, OCOTP_SRK6, OCOTP_SRK7});
 	if (flag_fuses.contains(name)) {
 		const auto& desc = flag_fuses.at(name);
 		return std::make_unique<FlagFuse>(std::move(nvmem), desc.offset, desc.mask, desc.bits);
