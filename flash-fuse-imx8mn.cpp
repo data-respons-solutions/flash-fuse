@@ -34,6 +34,7 @@ constexpr int OFFSET(BANK bank, WORD word)
 constexpr int OCOTP_LOCK =		OFFSET(BANK(0), WORD(0)); // 0x400
 constexpr int OCOTP_BOOT_CFG0 =	OFFSET(BANK(1), WORD(3)); // 0x470
 constexpr int OCOTP_BOOT_CFG1 =	OFFSET(BANK(2), WORD(0)); // 0x480
+constexpr int OCOTP_BOOT_CFG2 = OFFSET(BANK(2), WORD(1)); // 0x490
 constexpr int OCOTP_SRK0 =		OFFSET(BANK(6), WORD(0)); // 0x580
 constexpr int OCOTP_SRK1 =		OFFSET(BANK(6), WORD(1)); // 0x590
 constexpr int OCOTP_SRK2 =		OFFSET(BANK(6), WORD(2)); // 0x5a0
@@ -133,6 +134,20 @@ const std::map<std::string, FlagFuseDesc> flag_fuses = {
 			{"CS1", BIT(26)},
 			{"CS2", BIT(27)},
 			{"CS3", MASK(26, 27)},
+		}
+	}},
+	{"IMG_CNTN_SET1_OFFSET", {.offset = OCOTP_BOOT_CFG2, .mask = MASK(19, 22), .bits = {
+			{"N_0", 0x0},
+			{"N_1", BIT(19)},
+			{"N_2", BIT(20)},
+			{"N_3", MASK(19, 20)},
+			{"N_4", BIT(21)},
+			{"N_5", BIT(19) | BIT(21)},
+			{"N_6", MASK(20, 21)},
+			{"N_7", MASK(19, 21)},
+			{"N_8", BIT(22)},
+			{"N_9", BIT(19) | BIT(22)},
+			{"N_10", BIT(20) | BIT(22)},
 		}
 	}},
 };
