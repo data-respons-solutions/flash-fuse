@@ -1,5 +1,6 @@
 #include <string>
 #include <map>
+#include <array>
 #include <memory>
 
 constexpr uint32_t BIT(int n)
