@@ -179,3 +179,43 @@ TEST_CASE("Flag Fuse") {
 		}
 	}
 }
+
+TEST_CASE("SRK Fuse") {
+	TmpFile tmpf;
+	tmpf.fill(512, 0);
+	const std::array<int, 8> offset = {0, 4, 8, 12, 16, 20, 24, 28};
+	const std::array<uint32_t, 8> srk = {0x6838A56B, 0x41ED90A3, 0x59E27693, 0xE93446BC,
+										0x9AFD43DA, 0xC3CEAE17, 0x2C3EF695, 0xDFDE06AB};
+	const std::string srk_string = "0x6838A56B,0x41ED90A3,0x59E27693,0xE93446BC,0x9AFD43DA,0xC3CEAE17,0x2C3EF695,0xDFDE06AB";
+	SRKFuse fuse(tmpf.path(), offset);
+
+	SECTION("SRK valid string") {
+		REQUIRE(fuse.valid_arg(srk_string));
+	}
+	SECTION("SRK invalid string -- few fields") {
+		REQUIRE(!fuse.valid_arg("0x6838A56B,0x41ED90A3,0x59E27693,0xE93446BC,0x9AFD43DA,0xC3CEAE17,0x2C3EF695"));
+	}
+	SECTION("SRK invalid string -- garbage") {
+		REQUIRE(!fuse.valid_arg("garbage"));
+	}
+	SECTION("Commit") {
+		fuse.set(srk_string);
+		for (int i = 0; i < 8; ++i)
+			REQUIRE(tmpf.read_bank(offset[i]) == srk[i]);
+	}
+	SECTION("is fuseable -- empty") {
+		REQUIRE(fuse.is_fuseable(srk_string));
+	}
+	SECTION("is fuseable -- error not empty") {
+		tmpf.write_bank(offset[0], ~srk[0]);
+		REQUIRE(!fuse.is_fuseable(srk_string));
+	}
+	SECTION("Get empty") {
+		REQUIRE(fuse.get() == "0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000");
+	}
+	SECTION("Get fused") {
+		for (int i = 0; i < 8; ++i)
+			tmpf.write_bank(offset[i], srk[i]);
+		REQUIRE(fuse.get() == srk_string);
+	}
+}
