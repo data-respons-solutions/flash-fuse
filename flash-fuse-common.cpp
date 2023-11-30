@@ -139,22 +139,31 @@ SRKFuse::SRKFuse(std::string nvmem, std::array<int, 8> offset)
 	: mnvmem(std::move(nvmem)), moffset(offset)
 {}
 
-bool SRKFuse::valid_arg(const std::string& arg) const
+
+static bool parse_srk(const std::string& arg, std::array<uint32_t, 8>& buf)
 {
 	if (arg.size() != 87)
 		return false;
-	uint32_t buf[8];
-	const int r = sscanf(arg.c_str(), "0X%08" PRIX32 ",0X%08" PRIX32 ",0X%08" PRIX32 ",0X%08" PRIX32 ",0X%08" PRIX32 ",0X%08" PRIX32 ",0X%08" PRIX32 ",0X%08" PRIX32 "",
+	// Test upper case 0X
+	int r = sscanf(arg.c_str(), "0X%08" PRIX32 ",0X%08" PRIX32 ",0X%08" PRIX32 ",0X%08" PRIX32 ",0X%08" PRIX32 ",0X%08" PRIX32 ",0X%08" PRIX32 ",0X%08" PRIX32 "",
 					&buf[0], &buf[1], &buf[2], &buf[3], &buf[4], &buf[5], &buf[6], &buf[7]);
+	// Test lower case 0x, if needed
 	if (r != 8)
-		throw std::runtime_error("internal error, sscanf ret != 8");
-	return true;
+		r = sscanf(arg.c_str(), "0x%08" PRIX32 ",0x%08" PRIX32 ",0x%08" PRIX32 ",0x%08" PRIX32 ",0x%08" PRIX32 ",0x%08" PRIX32 ",0x%08" PRIX32 ",0x%08" PRIX32 "",
+						&buf[0], &buf[1], &buf[2], &buf[3], &buf[4], &buf[5], &buf[6], &buf[7]);
+	return r == 8;
+}
+
+bool SRKFuse::valid_arg(const std::string& arg) const
+{
+	std::array<uint32_t, 8> buf;
+	return parse_srk(arg, buf);
 }
 bool SRKFuse::is_fuseable(const std::string& arg) const
 {
 	(void) arg;
 	// Lazy implementation by simply checking for all zero
-	return get() == "0X00000000,0X00000000,0X00000000,0X00000000,0X00000000,0X00000000,0X00000000,0X00000000";
+	return get() == "0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000";
 }
 std::string SRKFuse::get() const
 {
@@ -162,7 +171,7 @@ std::string SRKFuse::get() const
 	for (int offset : moffset)
 		v.push_back(read_bank(mnvmem, offset));
 	char buf[88];
-	const int r = snprintf(buf, 88, "0X%08X,0X%08X,0X%08X,0X%08X,0X%08X,0X%08X,0X%08X,0X%08X",
+	const int r = snprintf(buf, 88, "0x%08X,0x%08X,0x%08X,0x%08X,0x%08X,0x%08X,0x%08X,0x%08X",
 							v.at(0), v.at(1), v.at(2), v.at(3), v.at(4), v.at(5), v.at(6), v.at(7));
 	if (r != 87)
 		throw std::runtime_error("internal error, snprintf ret != 87");
@@ -170,12 +179,9 @@ std::string SRKFuse::get() const
 }
 void SRKFuse::set(const std::string& arg)
 {
-	uint32_t buf[8];
-	const int r = sscanf(arg.c_str(), "0X%08" PRIX32 ",0X%08" PRIX32 ",0X%08" PRIX32 ",0X%08" PRIX32 ",0X%08" PRIX32 ",0X%08" PRIX32 ",0X%08" PRIX32 ",0X%08" PRIX32 "",
-					&buf[0], &buf[1], &buf[2], &buf[3], &buf[4], &buf[5], &buf[6], &buf[7]);
-	if (r != 8)
-		throw std::runtime_error("internal error, sscanf ret != 8");
+	std::array<uint32_t, 8> buf;
+	if (!parse_srk(arg, buf))
+		throw std::runtime_error("failed parsing fuse arg");
 	for (int i = 0; i < 8; ++i)
 		write_bank(mnvmem, moffset.at(i), buf[i]);
 }
-
