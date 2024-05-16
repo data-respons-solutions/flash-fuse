@@ -135,10 +135,50 @@ void MACFuse::set(const std::string& arg)
 	write_fuse(mnvmem, moffset2, mac1);
 }
 
+MAC2Fuse::MAC2Fuse(std::string nvmem, int offset1, int offset2)
+	: mnvmem(std::move(nvmem)), moffset1(offset1), moffset2(offset2)
+{}
+bool MAC2Fuse::valid_arg(const std::string& arg) const
+{
+	if (arg.size() != 12)
+		return false;
+	unsigned char buf[6];
+	int r = sscanf(arg.c_str(), "%02hhX%02hhX%02hhX%02hhX%02hhX%02hhX", &buf[0], &buf[1], &buf[2], &buf[3], &buf[4], &buf[5]);
+	if (r != 6)
+		throw std::runtime_error("internal error, sscanf ret != 6");
+	return true;
+}
+bool MAC2Fuse::is_fuseable(const std::string& arg) const
+{
+	(void) arg;
+	// Lazy implementation by simply checking for all zero
+	return get() == "000000000000";
+}
+std::string MAC2Fuse::get() const
+{
+	const std::array<uint8_t, 4> mac1 = read_fuse(mnvmem, moffset1);
+	const std::array<uint8_t, 4> mac2 = read_fuse(mnvmem, moffset2);
+	char buf[13];
+	int r = snprintf(buf, 13, "%02X%02X%02X%02X%02X%02X", mac2.at(3), mac2.at(2), mac2.at(1), mac2.at(0), mac1.at(3), mac1.at(2));
+	if (r != 12)
+		throw std::runtime_error("internal error, snprintf ret != 12");
+	return std::string(buf, r);
+}
+
+void MAC2Fuse::set(const std::string& arg)
+{
+	std::array<uint8_t, 4> mac1 {};
+	std::array<uint8_t, 4> mac2 {};
+	int r = sscanf(arg.c_str(), "%02hhX%02hhX%02hhX%02hhX%02hhX%02hhX", &mac2.at(3), &mac2.at(2), &mac2.at(1), &mac2.at(0), &mac1.at(3), &mac1.at(2));
+	if (r != 6)
+		throw std::runtime_error("internal error, sscanf ret != 6");
+	write_fuse(mnvmem, moffset1, mac1);
+	write_fuse(mnvmem, moffset2, mac2);
+}
+
 SRKFuse::SRKFuse(std::string nvmem, std::array<int, 8> offset)
 	: mnvmem(std::move(nvmem)), moffset(offset)
 {}
-
 
 static bool parse_srk(const std::string& arg, std::array<uint32_t, 8>& buf)
 {

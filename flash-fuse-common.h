@@ -75,6 +75,21 @@ private:
 	const int moffset2;
 };
 
+class MAC2Fuse : public IFuse {
+public:
+	MAC2Fuse(std::string nvmem, int offset1, int offset2);
+
+	bool valid_arg(const std::string& arg) const override;
+	bool is_fuseable(const std::string& arg) const override;
+	std::string get() const override;
+	void set(const std::string& arg) override;
+
+private:
+	std::string mnvmem;
+	const int moffset1;
+	const int moffset2;
+};
+
 class SRKFuse : public IFuse {
 public:
 	SRKFuse(std::string nvmem, std::array<int, 8> offset);
