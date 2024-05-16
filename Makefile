@@ -15,7 +15,7 @@ CLANG_TIDY_CHECKS = -checks=-*,modernize-*,cppcoreguidelines-*,readability-*,bug
 
 CLANG_TIDY_FILES = flash-fuse-imx8mm.cpp flash-fuse-main.cpp flash-fuse-common.cpp
 
-all: flash-fuse-imx8mm flash-fuse-imx6dl  flash-fuse-imx8mn
+all: flash-fuse-imx8mm flash-fuse-imx6dl flash-fuse-imx8mn flash-fuse-imx8mp
 .PHONY: all
 
 .PHONY: flash-fuse-imx8mm
@@ -26,6 +26,9 @@ flash-fuse-imx6dl: $(BUILD)/flash-fuse-imx6dl
 
 .PHONY: flash-fuse-imx8mn
 flash-fuse-imx8mn: $(BUILD)/flash-fuse-imx8mn
+
+.PHONY: flash-fuse-imx8mp
+flash-fuse-imx8mp: $(BUILD)/flash-fuse-imx8mp
 
 .PHONY: test
 test: $(BUILD)/test-flash-fuse
@@ -44,7 +47,10 @@ $(BUILD)/flash-fuse-imx6dl: $(addprefix $(BUILD)/, flash-fuse-imx6dl.o flash-fus
 	
 $(BUILD)/flash-fuse-imx8mn: $(addprefix $(BUILD)/, flash-fuse-imx8mn.o flash-fuse-common.o flash-fuse-main.o log.o)
 	$(CXX) -o $@ $^ $(LDFLAGS)
-	
+
+$(BUILD)/flash-fuse-imx8mp: $(addprefix $(BUILD)/, flash-fuse-imx8mp.o flash-fuse-common.o flash-fuse-main.o log.o)
+	$(CXX) -o $@ $^ $(LDFLAGS)
+
 $(BUILD)/test-flash-fuse: $(addprefix $(BUILD)/, test-flash-fuse.o flash-fuse-common.o log.o)
 	$(CXX) -o $@ $^ $(LDFLAGS) -lCatch2Main -lCatch2
 	
